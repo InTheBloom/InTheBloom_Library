@@ -10,16 +10,16 @@
 
 void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(const void *n1, const void *n2), int type);
 void mergesort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, void *n2), int type);
-void swap (void *n1, void *n2, size_t size);
+void swap_all (void *n1, void *n2, size_t size);
 
 /* - 使い方 - */
 
-/* swap関数は，任意の同じ型の変数へのポインタを受け取って入れ替えます。第一引数，第二引数に同じ型の変数へのポインタを，第三引数にその変数のメモリサイズをとります。ただし，通常のswapよりも約4倍遅いです。
+/* swap_all関数は，任意の同じ型の変数へのポインタを受け取って入れ替えます。第一引数，第二引数に同じ型の変数へのポインタを，第三引数にその変数のメモリサイズをとります。ただし，通常のswap_allよりも約4倍遅いです。
  */
 
 /* 使用例
  * int a = 0, b = 10;
- * swap(&a, &b, sizeof(int));
+ * swap_all(&a, &b, sizeof(int));
  * printf("%i", a); -> 10
  */
 
@@ -33,7 +33,7 @@ void swap (void *n1, void *n2, size_t size);
  */
 
 /* 比較関数の詳細について
- * 比較関数は，ソートしたいデータのポインタ二つを受け取って，「第一引数が先」の時に1を，「第二引数が先」の時に2を，「順番として同じ」とき0を返すように作ること
+ * 比較関数は，ソートしたいデータのポインタ二つを受け取って，「第一引数が先」の時に1を，「第二引数が先」の時に-1を，「順番として同じ」とき0を返すように作ること
  */
 
 /* 使用例
@@ -42,8 +42,48 @@ void swap (void *n1, void *n2, size_t size);
  * heapsort(t, n, sizeof(char *), mystrcmp, 1);
  */
 
+/* 比較関数の例 */
 
-void swap (void *n1, void *n2, size_t size) {
+// int比較
+int i_cmp (void *n1, void *n2) {
+	if (*(int *)n1 < *(int *)n2) {
+		return 1;
+	} else if (*(int *)n1 > *(int *)n2) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+// long long int比較
+int lli_cmp (void *n1, void *n2) {
+	if (*(long long int *)n1 < *(long long int *)n2) {
+		return 1;
+	} else if (*(long long int *)n1 > *(long long int *)n2) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+// 文字列比較
+int str_cmp (void *n1, void *n2) {
+	for (int i = 0; *(*(char **)n1 + i) != '\0' || *(*(char **)n2 + i) != '\0'; i++) {
+		if(*(*(char **)n1 + i) < *(*(char **)n2 + i)) {
+			return 1;
+		}
+		if(*(*(char **)n1 + i) > *(*(char **)n2 + i)) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+
+
+
+
+void swap_all (void *n1, void *n2, size_t size) {
 	char tmp[size];
 	for (int i = 0; size > i; i++) {
 		tmp[i] = *(char *)(n1 + i);
@@ -52,19 +92,21 @@ void swap (void *n1, void *n2, size_t size) {
 	}
 }
 
+/* ------------- ここからソート本体 ---------------- */
+
 void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, void *n2), int type) {
 	for (int i = 1; num > i; i++) {
 		for (int j = i; j > 0;) {
 			if (type == 1) {
 				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 2) {
-					swap((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
+					swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
 					j = (j - 1) / 2;
 				} else {
 					break;
 				}
 			} else {
 				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 1) {
-					swap((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
+					swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
 					j = (j - 1) / 2;
 				} else {
 					break;
@@ -74,7 +116,7 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, vo
 	}
 
 	for (int i = num - 1; i > 0; i--) {
-		swap((char *)base, (char *)(base + size * i), size);
+		swap_all((char *)base, (char *)(base + size * i), size);
 		for (int j = 0; ;) {
 			int lch = 2 * j + 1, rch = 2 * j + 2, rep;
 			if (i > rch) {
@@ -90,14 +132,14 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, vo
 			}
 			if (type == 1) {
 				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 1) {
-					swap((char *)(base + size * j), (char *)(base + size * rep), size);
+					swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
 					j = rep;
 				} else {
 					break;
 				}
 			} else {
 				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 2) {
-					swap((char *)(base + size * j), (char *)(base + size * rep), size);
+					swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
 					j = rep;
 				} else {
 					break;
