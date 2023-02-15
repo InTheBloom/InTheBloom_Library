@@ -8,8 +8,8 @@
 
 /* 関数定義 */
 
-void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(const void *n1, const void *n2), int type);
-void mergesort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, void *n2), int type);
+void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type);
+void mergesort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type);
 void swap_all (void *n1, void *n2, size_t size);
 
 /* - 使い方 - */
@@ -92,13 +92,13 @@ void swap_all (void *n1, void *n2, size_t size) {
 	}
 }
 
-/* ------------- ここからソート本体 ---------------- */
+/* ------------- heapsort ---------------- */
 
-void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, void *n2), int type) {
+void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type) {
 	for (int i = 1; num > i; i++) {
 		for (int j = i; j > 0;) {
 			if (type == 1) {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 2) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == -1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
 					j = (j - 1) / 2;
 				} else {
@@ -121,7 +121,7 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, vo
 			int lch = 2 * j + 1, rch = 2 * j + 2, rep;
 			if (i > rch) {
 				if (type == 1) {
-					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == 2 ? lch : rch);
+					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == -1 ? lch : rch);
 				} else {
 					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == 1 ? lch : rch);
 				}
@@ -138,7 +138,7 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, vo
 					break;
 				}
 			} else {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 2) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == -1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
 					j = rep;
 				} else {
@@ -149,3 +149,89 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *n1, vo
 	}
 }
 
+/* --------------- heapsortここまで ----------------- */
+
+
+/* --------------- mergesort ---------------------- */
+
+void merge (void *base1, int range1, void *base2, int range2, int (*cmpfunc)(void *, void *), size_t size, int type, char *tmp) {
+	int base1_current = 0, base2_current = 0;
+	int roop = range1 + range2;
+	for (int i = 0; roop > i; i++) {
+		if (cmpfunc((base1 + base1_current * size), (base2 + base2_current * size)) == 1) {
+			if (type == 1) {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
+				}
+				base1_current++;
+			} else {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
+				}
+				base2_current++;
+			}
+		} else {
+			if (type == 1) {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
+				}
+				base2_current++;
+			} else {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
+				}
+				base1_current++;
+			}
+		}
+
+		if (base1_current >= range1) {
+			for (i += 1; roop > i; ) {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
+				}
+				base2_current++;
+				i++;
+			}
+		} else if (base2_current >= range2) {
+			for (i += 1; roop > i; ) {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
+				}
+				base1_current++;
+				i++;
+			}
+		}
+	}
+
+	for (int i = 0; range1 > i; i++) {
+		for (int j = 0; size > j; j++) {
+			*(char *)(base1 + i * size + j) = tmp[i * size + j];
+		}
+	}
+	for (int i = 0; range2 > i; i++) {
+		for (int j = 0; size > j; j++) {
+			*(char *)(base2 + i * size + j) = tmp[range1 * size + i * size + j];
+		}
+	}
+}
+
+void mergesort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void*), int type) {
+	char *tmp = malloc(num * size);
+	int range = 1;
+	for (; num > range; range *= 2) {
+		for (int current = 1; num > current; ) { // currentは1から数えた配列のインデックス
+			if (num >= current + 2 * range - 1) {
+				merge((char *)(base + (current - 1) * size), range, (char *)(base + (current - 1) * size + size * range), range, cmpfunc, size, type, tmp);
+				current += 2 * range;
+			} else if (current + 2 * range - 1 > num && num >= current + range - 1) {
+				merge((char *)(base + size * (current - 1)), range, (char *)(base + size * (current - 1) + size * range), num - current - range + 1, cmpfunc, size, type, tmp);
+				break;
+			} else {
+				break;
+			}
+		}
+	}
+	free(tmp);
+}
+
+/* ----------------- mergesort ここまで -------------------- */
