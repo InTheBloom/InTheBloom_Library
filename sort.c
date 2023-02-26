@@ -14,7 +14,7 @@ void swap_all (void *n1, void *n2, size_t size);
 
 /* - 使い方 - */
 
-/* swap_all関数は，任意の同じ型の変数へのポインタを受け取って入れ替えます。第一引数，第二引数に同じ型の変数へのポインタを，第三引数にその変数のメモリサイズをとります。ただし，通常のswap_allよりも約4倍遅いです。
+/* swap_all関数は，任意の同じ型の変数へのポインタを受け取って入れ替えます。第一引数，第二引数に同じ型の変数へのポインタを，第三引数にその変数のメモリサイズをとります。ただし，通常の(型を指定した)swap関数よりも約4倍遅いです。
  */
 
 /* 使用例
@@ -24,7 +24,7 @@ void swap_all (void *n1, void *n2, size_t size);
  */
 
 /* heapsort関数とmergesort関数は，内部のソートアルゴリズムが少し違うだけで，基本的に使い方は同じです。実行時間がシビアな時に使うとTLEすると思います。(おそらく定数倍そんなに良くないです。)
- * heapsortはin-placeでO(nlog(n))オーダーのソートをします。mergesortは空間O(n)を使用してO(nlog(n))オーダーのソートをします。定数倍はmergesortのほうが基本的に2倍程度良いです。
+ * heapsortはin-placeでO(nlog(n))オーダーのソートをします。mergesortは空間O(n)を使用してO(nlog(n))オーダーのソートをします。定数倍はmergesortのほうが基本的に2倍程度良いです。あと、mergesortは安定ソートです。
  * 第一引数: ソートしたいデータ配列の先頭へのポインタ
  * 第二引数: 第一引数で指されているものを一つ目として，ソートしたい要素数
  * 第三引数: ソートしたいデータ型のバイト数
@@ -44,11 +44,26 @@ void swap_all (void *n1, void *n2, size_t size);
 
 /* 比較関数の例 */
 
+// char比較
+int ch_cmp (void *n1, void *n2) {
+	char a = *(char *)n1;
+	char b = *(char *)n2;
+	if (a > b) {
+		return 1;
+	} else if (a < b) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
 // int比較
 int i_cmp (void *n1, void *n2) {
-	if (*(int *)n1 < *(int *)n2) {
+	int a = *(int *)n1;
+	int b = *(int *)n2;
+	if (a > b) {
 		return 1;
-	} else if (*(int *)n1 > *(int *)n2) {
+	} else if (a < b) {
 		return -1;
 	} else {
 		return 0;
@@ -57,39 +72,36 @@ int i_cmp (void *n1, void *n2) {
 
 // long long int比較
 int lli_cmp (void *n1, void *n2) {
-	if (*(long long int *)n1 < *(long long int *)n2) {
+	long long int a = *(long long int *)n1;
+	long long int b = *(long long int *)n2;
+	if (a > b) {
 		return 1;
-	} else if (*(long long int *)n1 > *(long long int *)n2) {
+	} else if (a < b) {
 		return -1;
 	} else {
 		return 0;
 	}
 }
 
-// 文字列比較
+// 文字列比較(注意！ char *を渡してはいけない！ あくまでソート関数用なので、char **を渡すように！)
 int str_cmp (void *n1, void *n2) {
-	for (int i = 0; *(*(char **)n1 + i) != '\0' || *(*(char **)n2 + i) != '\0'; i++) {
-		if(*(*(char **)n1 + i) < *(*(char **)n2 + i)) {
+	char *a = *(char **)n1;
+	char *b = *(char **)n2;
+	for (int i = 0; a[i] != '\0' || b[i] != '\0'; i++) {
+		if (a[i] < b[i]) {
 			return 1;
-		}
-		if(*(*(char **)n1 + i) > *(*(char **)n2 + i)) {
+		} else if (a[i] > b[i]) {
 			return -1;
 		}
 	}
 	return 0;
 }
 
-
-
-
-
 void swap_all (void *n1, void *n2, size_t size) {
 	char tmp[size];
-	for (int i = 0; size > i; i++) {
-		tmp[i] = *(char *)(n1 + i);
-		*(char *)(n1 + i) = *(char *)(n2 + i);
-		*(char *)(n2 + i) = tmp[i];
-	}
+	memcpy(tmp, n1, size);
+	memcpy(n1, n2, size);
+	memcpy(n2, tmp, size);
 }
 
 /* ------------- heapsort ---------------- */
@@ -98,14 +110,14 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void
 	for (int i = 1; num > i; i++) {
 		for (int j = i; j > 0;) {
 			if (type == 1) {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == -1) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
 					j = (j - 1) / 2;
 				} else {
 					break;
 				}
 			} else {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 1) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == -1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
 					j = (j - 1) / 2;
 				} else {
@@ -121,9 +133,9 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void
 			int lch = 2 * j + 1, rch = 2 * j + 2, rep;
 			if (i > rch) {
 				if (type == 1) {
-					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == -1 ? lch : rch);
-				} else {
 					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == 1 ? lch : rch);
+				} else {
+					rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == -1 ? lch : rch);
 				}
 			} else if (rch == i) {
 				rep = lch;
@@ -131,14 +143,14 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void
 				break;
 			}
 			if (type == 1) {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 1) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == -1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
 					j = rep;
 				} else {
 					break;
 				}
 			} else {
-				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == -1) {
+				if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 1) {
 					swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
 					j = rep;
 				} else {
@@ -161,26 +173,26 @@ void merge (void *base1, int range1, void *base2, int range2, int (*cmpfunc)(voi
 		if (cmpfunc((base1 + base1_current * size), (base2 + base2_current * size)) == 1) {
 			if (type == 1) {
 				for (int j = 0; size > j; j++) {
-					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
-				}
-				base1_current++;
-			} else {
-				for (int j = 0; size > j; j++) {
 					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
 				}
 				base2_current++;
+			} else {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
+				}
+				base1_current++;
 			}
 		} else {
 			if (type == 1) {
 				for (int j = 0; size > j; j++) {
-					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
-				}
-				base2_current++;
-			} else {
-				for (int j = 0; size > j; j++) {
 					tmp[i * size + j] = *(char *)(base1 + base1_current * size + j);
 				}
 				base1_current++;
+			} else {
+				for (int j = 0; size > j; j++) {
+					tmp[i * size + j] = *(char *)(base2 + base2_current * size + j);
+				}
+				base2_current++;
 			}
 		}
 
