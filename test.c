@@ -14,11 +14,18 @@ int main (void) {
 		x[i] = rand();
 	}
 
+	/*
+	for (int i = 0; NUM > i; i++) {
+		printf("%i ", x[i]);
+	}
+	printf("\n\n");
+	// */
+
 	int start = clock();
 
 	//heapsort(x, NUM, sizeof(int), i_cmp, 1);
-	//qsort(x, NUM, sizeof(int), i_cmp);
-	mergesort(x, NUM, sizeof(int), i_cmp, 1);
+	qsort(x, NUM, sizeof(int), i_cmp);
+	//mergesort(x, NUM, sizeof(int), i_cmp, 1);
 
 	int end = clock();
 	/*
