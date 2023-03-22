@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "sort.c"
+#include "../src/sort.c"
 #define NUM 10000000
 
 int main (void) {

@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "prime_factorization.c"
+#include "../src/prime_factorization.c"
 
 int main (void) {
-	for (unsigned long long int i = INT_MAX; i >= 2; i--) {
+	for (unsigned long long int i = 1; INT_MAX > i; i++) {
 		printf("%llu\n", i);
 		prime_t tmp = factorization(i, -1);
-		/*
+		//*
 		printf("num = %lli\n", i);
-		for (int i = 0; tmp.fact[i] != -1; i++) {
-			printf("factor = %i, power = %i\n", tmp.fact[i], tmp.pow[i]);
+		for (int i = 0; tmp.fact[i] != 0; i++) {
+			printf("factor = %llu, power = %i\n", tmp.fact[i], tmp.pow[i]);
 		}
 		puts("");
 		// */
