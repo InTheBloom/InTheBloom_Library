@@ -23,8 +23,8 @@ int main (void) {
 
 	int start = clock();
 
-	//heapsort(x, NUM, sizeof(int), i_cmp, 1);
-	qsort(x, NUM, sizeof(int), i_cmp);
+	heapsort(x, NUM, sizeof(int), i_cmp, 1);
+	//qsort(x, NUM, sizeof(int), i_cmp);
 	//mergesort(x, NUM, sizeof(int), i_cmp, 1);
 
 	int end = clock();

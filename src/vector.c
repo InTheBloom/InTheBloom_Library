@@ -72,13 +72,14 @@ void shrink_vector (vector x) {
 	x->maxsize = pow_of_2;
 }
 
-void push_back (vector x, int y) {
+void push_back_vector (vector x, int y) {
 	if (x->maxsize > x->size) {
 		x->data[x->size++] = y;
 		return;
 	}
 
 	x->maxsize *= 2;
+
 	int *tmp = realloc(x->data, x->maxsize * sizeof(int));
 	if (tmp == NULL) {
 		fprintf(stderr, "memory allocation failed in 'push_back()'.\n");
@@ -89,10 +90,53 @@ void push_back (vector x, int y) {
 	x->data[x->size++] = y;
 }
 
-void pop_back (vector x) {
+void pop_back_vector (vector x) {
 	if (x->size == 0) {
 		return;
 	}
 
 	x->size -= 1;
+}
+
+vector copy_vector (vector y) { // this function works like x = y. x->size become equal to y->size.
+
+	vector x = create_vector(y->size);
+
+	for (size_t i = 0; y->size > i; i++) {
+		push_back_vector(x, y->data[i]);
+	}
+
+	return x;
+}
+
+void delete_vector (vector x, size_t index) {
+	if (index + 1 > x->size) {
+		fprintf(stderr, "out of index in 'delete_vector'.\n");
+		return;
+	}
+
+	for (size_t i = 0; index + i + 1 != x->size; i++) {
+		x->data[index + i] = x->data[index + i + 1];
+	}
+
+	x->size -= 1;
+}
+
+void range_delete_vector (vector x, size_t begin, size_t end) { // this function delete elements of x in range [begin, end).
+	if (begin > end) {
+		fprintf(stderr, "invalid range in 'range_delete_vector'.\n");
+		return;
+	}
+
+	if (end > x->size) {
+		fprintf(stderr, "out of index in 'range_delete_vector'.\n");
+		return;
+	}
+
+	size_t i = 0;
+	for (; end + i != x->size; i++) {
+		x->data[begin + i] = x->data[end + i];
+	}
+
+	x->size -= end - begin;
 }
