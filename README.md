@@ -7,7 +7,7 @@
 私が作成した部分に関しては、どなたでも、どんな用途でも使用していただいて構いません。
 
 ## 使い方など
-[Github Pages](docs/index.html)で気が向いたときに整備しています。
+[Github Pages](https://inthebloom.github.io/InTheBloom_Library/)で気が向いたときに整備しています。
 
 ## 免責
 このプログラムを利用することに起因するあらゆる不利益等の責任は負いかねます。ご了承ください。
@@ -24,7 +24,7 @@ This is a C language library that I use for competitive programming.
 Anyone can use the part I created for any purpose.
 
 ## how to use
-I maintain it when I feel like it on [Github Pages](docs/index.html).
+I maintain it when I feel like it on [Github Pages](https://inthebloom.github.io/InTheBloom_Library/).
 
 ## disclaimer
 We are not responsible for any disadvantages caused by using this program. note that.
