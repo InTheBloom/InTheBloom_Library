@@ -27,8 +27,13 @@ int main (void) {
 
 	printf("y->size = %zu\n", y->size);
 
-	for (int i = 0; y->size > i; i++) {
-		printf("%i ", y->data[i]);
+	foreach_vector(y, itery) {
+		printf("%i ", itery);
+	}
+	printf("\n");
+
+	foreach_vector (x, iterx) {
+		printf("%i ", iterx);
 	}
 	printf("\n");
 

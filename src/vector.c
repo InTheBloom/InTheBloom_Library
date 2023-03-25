@@ -1,6 +1,9 @@
 /* vector(bundle) */
 /* The type 'vector' is another name of 'struct vector *' please be careful */
 
+#define FOREACH_vector(x, iter) for (int zz = 0, iter = x->data[zz]; zz < x->size; zz++, iter = x->data[zz])
+// foreach_vector macro requires two variables. the first one is `vector`, the other is `int`. Not to cause name collision, roop counter name is `zz`
+
 struct vector {
 	int *data;
 	size_t size;
@@ -133,8 +136,7 @@ void range_delete_vector (vector x, size_t begin, size_t end) { // this function
 		return;
 	}
 
-	size_t i = 0;
-	for (; end + i != x->size; i++) {
+	for (size_t i = 0; end + i != x->size; i++) {
 		x->data[begin + i] = x->data[end + i];
 	}
 
