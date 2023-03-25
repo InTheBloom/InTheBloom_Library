@@ -27,12 +27,12 @@ int main (void) {
 
 	printf("y->size = %zu\n", y->size);
 
-	foreach_vector(y, itery) {
+	FOREACH_vector(y, itery) {
 		printf("%i ", itery);
 	}
 	printf("\n");
 
-	foreach_vector (x, iterx) {
+	FOREACH_vector (x, iterx) {
 		printf("%i ", iterx);
 	}
 	printf("\n");
