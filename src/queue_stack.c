@@ -52,6 +52,7 @@ void enqueue (queue x, int y) {
 	new_node->next = NULL;
 	new_node->data = y;
 
+	// link new node to queue object
 	if (x->size == 0) {
 		x->head = new_node;
 	} else {
@@ -71,10 +72,30 @@ int front_queue (queue x) {
 	int DATA = x->head->data;
 
 	node_queue tmp = x->head->next;
+	tmp->previous = NULL;
 
 	free(x->head);
 
 	x->head = tmp;
+	x->size--;
+
+	return DATA;
+}
+
+int back_queue (queue x) {
+	if (x->size == 0) {
+		fprintf(stderr, "queue is empty!\n");
+		return -1010101; // error number
+	}
+
+	int DATA = x->tail->data;
+
+	node_queue tmp = x->tail->previous;
+	tmp->next = NULL;
+
+	free(x->tail);
+
+	x->tail = tmp;
 	x->size--;
 
 	return DATA;
