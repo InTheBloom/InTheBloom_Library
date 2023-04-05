@@ -1,4 +1,4 @@
 ---
 layout: home
-list_title: List of open documents
+list_title: "新着"
 ---
