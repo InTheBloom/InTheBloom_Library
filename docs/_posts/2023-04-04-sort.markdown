@@ -1,6 +1,7 @@
 ---
 layout: post
-title: "sort"
+title: "sort.c"
+tags: sort,array
 ---
 
 # 配列のソート

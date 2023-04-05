@@ -40,6 +40,14 @@ plugins:
 # Excluded items can be processed by explicitly listing the directories or
 # their entries' file path in the `include:` list.
 
+# tags and categories
+
+collections:
+  categories:
+    output: true
+  tags:
+    output: true
+
 include:
 - _includes
 
