@@ -180,9 +180,9 @@ int str_cmp (void *n1, void *n2) {
 	char *a = *(char **)n1;
 	char *b = *(char **)n2;
 	for (int i = 0; a[i] != '\0' || b[i] != '\0'; i++) {
-		if (a[i] < b[i]) {
+		if (a[i] > b[i]) {
 			return 1;
-		} else if (a[i] > b[i]) {
+		} else if (a[i] < b[i]) {
 			return -1;
 		}
 	}
