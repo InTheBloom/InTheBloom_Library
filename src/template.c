@@ -1,4 +1,4 @@
-/* InTheBloom_Templete v1.00 (BETA) */
+/* InTheBloom_Template v1.00 (BETA) */
 
 /* Originally includes 'in_out.c', 'debug.c' */
 
@@ -16,10 +16,13 @@
 	fprintf(stderr, " = %s\n", x);\
 }
 #define EPRINT_ARRAY(x, n) do {\
+	fprintf(stderr, "[ ");\
 	for (int qq = 0; qq < n; qq++) {\
-		fprintf(stderr, #x);\
-		fprintf(stderr, "[%d] = %d\n", qq, x[qq]);\
-	} while(0)
+		long long Z = x[qq];\
+		fprintf(stderr, "%lld ", Z);\
+	}\
+	fprintf(stderr, "]\n");\
+} while (0)
 
 int read_int (void) {
 	int x;

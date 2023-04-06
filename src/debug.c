@@ -8,7 +8,10 @@
 	fprintf(stderr, " = %s\n", x);\
 }
 #define EPRINT_ARRAY(x, n) do {\
+	fprintf(stderr, "[ ");\
 	for (int qq = 0; qq < n; qq++) {\
-		fprintf(stderr, #x);\
-		fprintf(stderr, "[%d] = %d\n", qq, x[qq]);\
-	} while(0)
+		long long Z = x[qq];\
+		fprintf(stderr, "%lld ", Z);\
+	}\
+	fprintf(stderr, "]\n");\
+} while (0)
