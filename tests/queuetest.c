@@ -11,6 +11,7 @@ int main (void) {
 		enqueue(Queue, i);
 	}
 
+
 	for (int i = 0; i < 5; i++) {
 		printf("%i ", front_queue(Queue));
 	}
@@ -20,10 +21,15 @@ int main (void) {
 		enqueue(Queue, i + 20);
 	}
 
-	for (int i = 0; i < 20; i++) {
-		printf("%i ", front_queue(Queue));
-		printf("size = %zu\n", Queue->size);
+	for (int i = 0; i < 5; i++) {
+		printf("%i ", back_queue(Queue));
 	}
+	printf("\n");
+
+	for (int i = 0; i < 10; i++) {
+		printf("%i ", front_queue(Queue));
+	}
+	printf("\n");
 
 	destroy_queue(Queue);
 

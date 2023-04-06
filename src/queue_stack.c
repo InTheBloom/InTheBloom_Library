@@ -1,5 +1,17 @@
 /* queue and stack */
 
+/*            queue OVERVIEW              */
+/*                                        */
+/*                Queue                   */
+/*               /    \                   */
+/*            front   tail                */
+/*                                        */
+/*                DATA                    */
+/* front -> item1 -> item2 -> ... -> tail */
+/*                                        */
+/*            prev <- -> next             */
+/*                                        */
+
 struct node_queue {
 	struct node_queue *previous;
 	struct node_queue *next;
@@ -48,55 +60,73 @@ void enqueue (queue x, int y) {
 		exit(EXIT_FAILURE);
 	}
 
-	new_node->previous = x->tail;
-	new_node->next = NULL;
 	new_node->data = y;
+	new_node->previous = NULL;
+	new_node->next = NULL;
 
-	// link new node to queue object
+	// if queue doesn't have node
 	if (x->size == 0) {
 		x->head = new_node;
+		x->tail = new_node;
+		x->size++;
 	} else {
+		new_node->previous = x->tail;
 		x->tail->next = new_node;
+		x->tail = new_node;
+		x->size++;
 	}
-
-	x->tail = new_node;
-	x->size++;
 }
 
 int front_queue (queue x) {
 	if (x->size == 0) {
-		fprintf(stderr, "queue is empty!\n");
+		fprintf(stderr, "queue is empty! 'front_queue'\n");
 		return -1010101; // error number
 	}
 
 	int DATA = x->head->data;
 
-	node_queue tmp = x->head->next;
-	tmp->previous = NULL;
+	if (x->size > 1) {
+		node_queue tmp = x->head->next;
+		tmp->previous = NULL;
 
-	free(x->head);
+		free(x->head);
 
-	x->head = tmp;
-	x->size--;
+		x->head = tmp;
+		x->size--;
+	} else {
+		free(x->head);
+
+		x->head = NULL;
+		x->tail = NULL;
+		x->size--;
+	}
 
 	return DATA;
 }
 
 int back_queue (queue x) {
 	if (x->size == 0) {
-		fprintf(stderr, "queue is empty!\n");
+		fprintf(stderr, "queue is empty! 'back_queue'\n");
 		return -1010101; // error number
 	}
 
 	int DATA = x->tail->data;
 
-	node_queue tmp = x->tail->previous;
-	tmp->next = NULL;
+	if (x->size > 1) {
+		node_queue tmp = x->tail->previous;
+		tmp->next = NULL;
 
-	free(x->tail);
+		free(x->tail);
 
-	x->tail = tmp;
-	x->size--;
+		x->tail = tmp;
+		x->size--;
+	} else {
+		free(x->head);
+
+		x->head = NULL;
+		x->tail = NULL;
+		x->size--;
+	}
 
 	return DATA;
 }
