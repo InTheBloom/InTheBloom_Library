@@ -1,4 +1,4 @@
-/* InTheBloom_Template v1.00 (BETA) */
+/* InTheBloom_Template v1.02 (BETA) Last updated: 2023/4/7 */
 
 /* Originally includes 'in_out.c', 'debug.c' */
 
@@ -8,20 +8,19 @@
 
 #define EPRINT_INT(x) {\
 	long long Z = x;\
-	fprintf(stderr, #x);\
-	fprintf(stderr, " = %lld\n", Z);\
+	fprintf(stderr, "Line %s: %s = %lld\n", __LINE__, #x, Z);\
 }
 #define EPRINT_STR(x) {\
-	fprintf(stderr, #x);\
-	fprintf(stderr, " = %s\n", x);\
+	fprintf(stderr, "Line %s: %s = %s\n", __LINE__, #x, x);\
 }
-#define EPRINT_ARRAY(x, n) do {\
-	fprintf(stderr, "[ ");\
-	for (int qq = 0; qq < n; qq++) {\
+#define EPRINT_INT_ARRAY(x, n) do {\
+	fprintf(stderr, "Line %s: %s = [", __LINE__, #x);\
+	for (int qq = 0; qq < n - 1; qq++) {\
 		long long Z = x[qq];\
-		fprintf(stderr, "%lld ", Z);\
+		fprintf(stderr, "%lld, ", Z);\
 	}\
-	fprintf(stderr, "]\n");\
+	long long Z = x[n - 1];\
+	fprintf(stderr, "%lld]\n", Z);\
 } while (0)
 
 int read_int (void) {
@@ -40,17 +39,40 @@ void read_str (char *x) {
 	scanf("%s", x);
 }
 
-void print_array_with_space (int *x, size_t n) {
+void read_int_array (x, n) {
 	for (int i = 0; i < n; i++) {
-		printf("%d ", x[i]);
+		scanf("%d", &x[i]);
 	}
-	printf("\n");
 }
+
+// Defined with macros to support multiple types.
+
+#define print_array_with_space(x, n) do {\
+	for (int i = 0; i < n; i++) {\
+		long long Z = x[i];\
+		printf("%lld ", Z);\
+	}\
+	printf("\n");\
+} while (0)
+
+#define print_array_with_newlines(x, n) do {\
+	for (int i = 0; i < n; i++) {\
+		long long Z = x[i];\
+		printf("%lld\n", Z);\
+	}\
+} while (0)
+
+#define print_int(x) do {\
+	long long Z = x;\
+	printf("%lld\n", Z);\
+} while (0)
 
 void solve () {
 }
 
 int main (void) {
+
+	solve();
 
 	return 0;
 }

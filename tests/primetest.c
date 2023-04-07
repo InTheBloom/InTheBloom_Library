@@ -3,7 +3,18 @@
 #include <limits.h>
 #include "../src/prime_factorization.c"
 
+void test (void) {
+	prime_t x = factorization(2623561561, -1);
+	printf("2623561561 = ");
+	for (int i = 0; x.fact[i] != 0; i++) {
+		printf("%lld * ", x.fact[i]);
+	}
+	printf("\n");
+}
+
 int main (void) {
+	test();
+	return 0;
 	for (unsigned long long int i = 1; INT_MAX > i; i++) {
 		printf("%llu\n", i);
 		prime_t tmp = factorization(i, -1);

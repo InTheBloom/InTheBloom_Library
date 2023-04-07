@@ -14,9 +14,30 @@ void read_str (char *x) {
 	scanf("%s", x);
 }
 
-void print_array_with_space (int *x, size_t n) {
+void read_int_array (x, n) {
 	for (int i = 0; i < n; i++) {
-		printf("%d ", x[i]);
+		scanf("%d", &x[i]);
 	}
-	printf("\n");
 }
+
+// Defined with macros to support multiple types.
+
+#define print_array_with_space(x, n) do {\
+	for (int i = 0; i < n; i++) {\
+		long long Z = x[i];\
+		printf("%lld ", Z);\
+	}\
+	printf("\n");\
+} while (0)
+
+#define print_array_with_newlines(x, n) do {\
+	for (int i = 0; i < n; i++) {\
+		long long Z = x[i];\
+		printf("%lld\n", Z);\
+	}\
+} while (0)
+
+#define print_int(x) do {\
+	long long Z = x;\
+	printf("%lld\n", Z);\
+} while (0)
