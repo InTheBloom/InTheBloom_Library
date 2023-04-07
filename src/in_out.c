@@ -14,7 +14,7 @@ void read_str (char *x) {
 	scanf("%s", x);
 }
 
-void read_int_array (x, n) {
+void read_int_array (int *x, int n) {
 	for (int i = 0; i < n; i++) {
 		scanf("%d", &x[i]);
 	}
