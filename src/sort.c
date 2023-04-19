@@ -1,6 +1,6 @@
-void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type);
-void mergesort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type);
-void swap_all (void *n1, void *n2, size_t size);
+/* you have to include */
+#include <stdlib.h>
+#include <string.h>
 
 /* heapsort(bundle) */
 

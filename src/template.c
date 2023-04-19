@@ -1,4 +1,4 @@
-/* InTheBloom_Template v1.02 (BETA) Last updated: 2023/4/7 */
+/* InTheBloom_Template v1.03 (BETA) Last updated: 2023/4/19 */
 
 /* Originally includes 'in_out.c', 'debug.c' */
 
@@ -14,13 +14,17 @@
 	fprintf(stderr, "Line %d: %s = %s\n", __LINE__, #x, x);\
 }
 #define EPRINT_INT_ARRAY(x, n) do {\
-	fprintf(stderr, "Line %d: %s = [", __LINE__, #x);\
-	for (int qq = 0; qq < n - 1; qq++) {\
-		long long Z = x[qq];\
-		fprintf(stderr, "%lld, ", Z);\
-	}\
+	if (n > 0) {\
+		fprintf(stderr, "Line %d: %s = [", __LINE__, #x);\
+		for (int qq = 0; qq < n - 1; qq++) {\
+			long long Z = x[qq];\
+			fprintf(stderr, "%lld, ", Z);\
+		}\
 	long long Z = x[n - 1];\
 	fprintf(stderr, "%lld]\n", Z);\
+	} else {\
+		fprintf(stderr, "[]\n");\
+	}\
 } while (0)
 
 #define NEWLINE fprintf(stderr, "\n")
@@ -28,6 +32,12 @@
 int read_int (void) {
 	int x;
 	scanf("%d", &x);
+	return x;
+}
+
+double read_double (void) {
+	double x;
+	scanf("%lf", &x);
 	return x;
 }
 
@@ -47,9 +57,47 @@ void read_int_array (int *x, int n) {
 	}
 }
 
+void read_long_long_array (long long *x, int n) {
+	for (int i = 0; i < n; i++) {
+		scanf("%lld", &x[i]);
+	}
+}
+
+// Not to forget to return, these macros are defined
+
+#define YES() do {\
+	puts("YES");\
+	return;\
+} while (0)
+
+#define Yes() do {\
+	puts("Yes");\
+	return;\
+} while (0)
+
+#define yes() do {\
+	puts("yes");\
+	return;\
+} while (0)
+
+#define NO() do {\
+	puts("NO");\
+	return;\
+} while (0)
+
+#define No() do {\
+	puts("No");\
+	return;\
+} while (0)
+
+#define no() do {\
+	puts("no");\
+	return;\
+} while (0)
+
 // Defined with macros to support multiple types.
 
-#define print_array_with_space(x, n) do {\
+#define print_int_array_with_space(x, n) do {\
 	for (int i = 0; i < n; i++) {\
 		long long Z = x[i];\
 		printf("%lld ", Z);\
@@ -57,27 +105,7 @@ void read_int_array (int *x, int n) {
 	printf("\n");\
 } while (0)
 
-#define print_array_with_newlines(x, n) do {\
-	for (int i = 0; i < n; i++) {\
-		long long Z = x[i];\
-		printf("%lld\n", Z);\
-	}\
-} while (0)
-
-#define print_int(x) do {\
-	long long Z = x;\
-	printf("%lld\n", Z);\
-} while (0)
-
-#define print_array_with_space(x, n) do {\
-	for (int i = 0; i < n; i++) {\
-		long long Z = x[i];\
-		printf("%lld ", Z);\
-	}\
-	printf("\n");\
-} while (0)
-
-#define print_array_with_newlines(x, n) do {\
+#define print_int_array_with_newlines(x, n) do {\
 	for (int i = 0; i < n; i++) {\
 		long long Z = x[i];\
 		printf("%lld\n", Z);\

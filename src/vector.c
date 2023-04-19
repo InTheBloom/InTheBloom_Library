@@ -1,8 +1,12 @@
+/* you need to iclude */
+#include <stdio.h>
+#include <stdlib.h>
+
 /* vector(bundle) */
 /* The type 'vector' is another name of 'struct vector *' please be careful */
 
 #define FOREACH_vector(x, iter) for (int zz = 0, iter = x->data[zz]; zz < x->size; zz++, iter = x->data[zz])
-// foreach_vector macro requires two variables. the first one is `vector`, the other is `int`. Not to cause name collision, roop counter name is `zz`
+// FOREACH_vector macro requires two variables. the first one is `vector`, the other is `int`. Not to cause name collision, roop counter name is `zz`
 
 struct vector {
 	int *data;

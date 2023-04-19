@@ -1,3 +1,7 @@
+/* you need to include */
+#include <stdio.h>
+#include <stdlib.h>
+
 /* queue and stack */
 
 /*            queue OVERVIEW              */
