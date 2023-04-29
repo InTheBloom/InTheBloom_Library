@@ -14,15 +14,15 @@ void swap_all (void *n1, void *n2, size_t size) {
 void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void *), int type) {
     for (int i = 1; num > i; i++) {
         for (int j = i; j > 0;) {
-            if (type == 1) {
-                if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == 1) {
+            if (type >= 0) {
+                if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) >= 0) {
                     swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
                     j = (j - 1) / 2;
                 } else {
                     break;
                 }
             } else {
-                if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) == -1) {
+                if (cmpfunc((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2))) < 0) {
                     swap_all((char *)(base + size * j), (char *)(base + size * ((j - 1) / 2)), size);
                     j = (j - 1) / 2;
                 } else {
@@ -37,25 +37,25 @@ void heapsort (void *base, size_t num, size_t size, int (* cmpfunc)(void *, void
         for (int j = 0; ;) {
             int lch = 2 * j + 1, rch = 2 * j + 2, rep;
             if (i > rch) {
-                if (type == 1) {
-                    rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == 1 ? lch : rch);
+                if (type >= 0) {
+                    rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) >= 0 ? lch : rch);
                 } else {
-                    rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) == -1 ? lch : rch);
+                    rep = (cmpfunc((char *)(base + size * lch), (char *)(base + size * rch)) < 0 ? lch : rch);
                 }
             } else if (rch == i) {
                 rep = lch;
             } else {
                 break;
             }
-            if (type == 1) {
-                if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == -1) {
+            if (type >= 0) {
+                if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) < 0) {
                     swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
                     j = rep;
                 } else {
                     break;
                 }
             } else {
-                if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) == 1) {
+                if (cmpfunc((char *)(base + size * j), (char *)(base + size * rep)) >= 0) {
                     swap_all((char *)(base + size * j), (char *)(base + size * rep), size);
                     j = rep;
                 } else {
@@ -73,9 +73,9 @@ void merge (void *base, int range1, int range2, size_t size, int type, int (* cm
     memcpy(tmp2, (char *)(base + range1 * size), range2 * size);
     int num1 = 0, num2 = 0; // 仮配列のインデックス
     int basenum = 0; // もとの配列のインデックス
-    if (type == 1) {
+    if (type >= 0) {
         for (; ;) {
-            if (cmpfunc(tmp1 + size * num1, tmp2 + size * num2) != 1) {
+            if (cmpfunc(tmp1 + size * num1, tmp2 + size * num2) < 0) {
                 memcpy(base + size * basenum, tmp1 + size * num1, size);
                 num1++;
             } else {
@@ -95,7 +95,7 @@ void merge (void *base, int range1, int range2, size_t size, int type, int (* cm
         }
     } else {
         for (; ;) {
-            if (cmpfunc(tmp1 + size * num1, tmp2 + size * num2) == 1) {
+            if (cmpfunc(tmp1 + size * num1, tmp2 + size * num2) >= 0) {
                 memcpy(base + size * basenum, tmp1 + size * num1, size);
                 num1++;
             } else {
