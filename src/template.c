@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define EPRINT_INT(x) {\
     long long Z = x;\
@@ -53,30 +54,30 @@ void read_str (char *x) {
 }
 
 void read_int_array (int *x, int n) {
-    for (int i = 0; i < n; i++) {
-        scanf("%d", &x[i]);
+    for (int qq = 0; qq < n; qq++) {
+        scanf("%d", &x[qq]);
     }
 }
 
 void read_long_long_array (long long *x, int n) {
-    for (int i = 0; i < n; i++) {
-        scanf("%lld", &x[i]);
+    for (int qq = 0; qq < n; qq++) {
+        scanf("%lld", &x[qq]);
     }
 }
 
 // Defined with macros to support multiple types.
 
 #define print_int_array_with_space(x, n) do {\
-    for (int i = 0; i < n; i++) {\
-        long long Z = x[i];\
+    for (int qq = 0; qq < n; qq++) {\
+        long long Z = x[qq];\
         printf("%lld ", Z);\
     }\
     printf("\n");\
 } while (0)
 
 #define print_int_array_with_newlines(x, n) do {\
-    for (int i = 0; i < n; i++) {\
-        long long Z = x[i];\
+    for (int qq = 0; qq < n; qq++) {\
+        long long Z = x[qq];\
         printf("%lld\n", Z);\
     }\
 } while (0)
