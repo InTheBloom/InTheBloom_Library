@@ -16,23 +16,23 @@
 /*            prev <- -> next             */
 /*                                        */
 
-struct node_queue {
-    struct node_queue *previous;
-    struct node_queue *next;
-    int data;
+struct queue_node {
+    struct queue_node *previous;
+    struct queue_node *next;
+    long long data;
 };
 
-typedef struct node_queue * node_queue;
+typedef struct queue_node * queue_node;
 
 struct queue {
     size_t size;
-    node_queue head;
-    node_queue tail;
+    queue_node head;
+    queue_node tail;
 };
 
 typedef struct queue * queue;
 
-queue create_queue (void) {
+queue queue_create (void) {
 
     queue x = malloc(sizeof(struct queue));
     if (x == NULL) {
@@ -47,7 +47,7 @@ queue create_queue (void) {
     return x;
 }
 
-void destroy_queue (queue x) {
+void queue_destroy (queue x) {
     for (; x->head != NULL; x->head = x->head->next) {
         free(x->head);
     }
@@ -56,9 +56,19 @@ void destroy_queue (queue x) {
     x = NULL;
 }
 
-void enqueue (queue x, int y) {
+void queue_clear (queue x) {
+    for (; x->head != NULL; x->head = x->head->next) {
+        free(x->head);
+    }
 
-    node_queue new_node = malloc(sizeof(struct node_queue));
+    x->size = 0;
+    x->head = NULL;
+    x->tail = NULL;
+}
+
+void queue_enqueue (queue x, long long y) {
+
+    queue_node new_node = malloc(sizeof(struct queue_node));
     if (new_node == NULL) {
         fprintf(stderr, "memory allocate failed in 'push_back_queue'.\n");
         exit(EXIT_FAILURE);
@@ -81,16 +91,16 @@ void enqueue (queue x, int y) {
     }
 }
 
-int front_queue (queue x) {
+long long queue_front (queue x) {
     if (x->size == 0) {
         fprintf(stderr, "queue is empty! 'front_queue'\n");
         return -1010101; // error number
     }
 
-    int DATA = x->head->data;
+    long long DATA = x->head->data;
 
     if (x->size > 1) {
-        node_queue tmp = x->head->next;
+        queue_node tmp = x->head->next;
         tmp->previous = NULL;
 
         free(x->head);
@@ -108,16 +118,16 @@ int front_queue (queue x) {
     return DATA;
 }
 
-int back_queue (queue x) {
+long long queue_back (queue x) {
     if (x->size == 0) {
         fprintf(stderr, "queue is empty! 'back_queue'\n");
         return -1010101; // error number
     }
 
-    int DATA = x->tail->data;
+    long long DATA = x->tail->data;
 
     if (x->size > 1) {
-        node_queue tmp = x->tail->previous;
+        queue_node tmp = x->tail->previous;
         tmp->next = NULL;
 
         free(x->tail);
