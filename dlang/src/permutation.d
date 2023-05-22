@@ -3,22 +3,21 @@
 import std;
 
 void main () {
-    int[] a = [1, 2, 3, 4];
-    while (a != [4, 3, 2, 1]) {
+    int[] a = [1, 1, 2, 2, 3];
+    do {
         writeln(a);
-        next_permutation(a);
-    }
+    } while (next_permutation(a));
 
-    while (a != [1, 2, 3, 4]) {
+    writeln("");
+
+    do {
         writeln(a);
-        prev_permutation(a);
-    }
-    writeln(a);
+    } while (prev_permutation(a));
 }
 
-void next_permutation(T) (T arr) {
+bool next_permutation(T) (T[] arr) {
     if (arr.length < 2) {
-        return;
+        return false;
     }
 
     int i = -1, j;
@@ -31,27 +30,24 @@ void next_permutation(T) (T arr) {
 
     // 存在しない
     if (i == -1) {
-        return;
+        return false;
     }
 
-    foreach (idx; i+1..arr.length) {
-        if (arr[idx] < arr[i]) {
-            j = cast(int)idx - 1;
+    foreach_reverse (idx; i+1..arr.length) {
+        if (arr[i] < arr[idx]) {
+            j = cast(int)idx;
             break;
         }
     }
 
-    if (j <= i) {
-        j = cast(int)arr.length - 1;
-    }
-
     swap(arr[i], arr[j]);
     arr = arr[0..i+1] ~ arr[i+1..$].reverse;
+    return true;
 }
 
-void prev_permutation(T) (T arr) {
+bool prev_permutation(T) (T[] arr) {
     if (arr.length < 2) {
-        return;
+        return false;
     }
 
     int i = -1, j;
@@ -64,20 +60,17 @@ void prev_permutation(T) (T arr) {
 
     // 存在しない
     if (i == -1) {
-        return;
+        return false;
     }
 
-    foreach (idx; i+1..arr.length) {
-        if (arr[i] < arr[idx]) {
-            j = cast(int)idx - 1;
+    foreach_reverse (idx; i+1..arr.length) {
+        if (arr[idx] < arr[i]) {
+            j = cast(int)idx;
             break;
         }
     }
 
-    if (j <= i) {
-        j = cast(int)arr.length - 1;
-    }
-
     swap(arr[i], arr[j]);
     arr = arr[0..i+1] ~ arr[i+1..$].reverse;
+    return true;
 }
