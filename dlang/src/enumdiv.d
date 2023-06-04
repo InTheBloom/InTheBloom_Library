@@ -1,6 +1,6 @@
 struct enumdiv {
-    int[] div;
-    this (int N) {
+    long[] div;
+    this (long N) {
         foreach (x; 1..N+1) {
             if (N < x * x) {
                 break;
@@ -27,13 +27,13 @@ struct enumdiv {
     void popFront() {
         begin++;
     }
-    int front () const {
+    long front () const {
         return div[begin];
     }
     void popBack () {
         end--;
     }
-    int back () const {
+    long back () const {
         return div[end - 1];
     }
 }

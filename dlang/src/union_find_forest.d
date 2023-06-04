@@ -3,8 +3,12 @@ struct UnionFind(T) {
     int[T] size;
 
     // どの要素が一番上の親かを返す。途中経由した頂点もparentの内容がすべて更新される。
-    // privateを外しても問題ないが、同一グループ判定にはis_same_group()を使うべき
-    private T root (T x) {
+    T root (T x) {
+        if (x !in parent) {
+            parent[x] = x;
+            size[x] = 1;
+            return x;
+        }
         if (parent[x] != x) {
             parent[x] = root(parent[x]);
         }
