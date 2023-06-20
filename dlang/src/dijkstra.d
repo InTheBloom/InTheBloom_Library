@@ -1,35 +1,3 @@
-import std;
-
-void read(T...)(string S, ref T args) {
-    auto buf = S.split;
-    foreach (i, ref arg; args) {
-        arg = buf[i].to!(typeof(arg));
-    }
-}
-
-void read_array(T)(string S, ref T[] arg) {
-    arg = S.split.to!(T[]);
-}
-
-void main () {
-    int n, m; readln.read(n, m);
-
-    auto Graph = Dijkstra!int();
-
-    foreach (_; 0..m) {
-        int u, v, w; readln.read(u, v, w);
-        Graph.input(u, v, w);
-    }
-
-    int begin; readln.read(begin);
-
-    Graph.calculate(begin);
-
-    foreach (i; 1..9) {
-        writeln("to ", i, " cost : ", Graph.cost(i));
-    }
-}
-
 struct Dijkstra(T) {
     T[][T] graph;
     long[T][T] weight;
@@ -61,15 +29,23 @@ struct Dijkstra(T) {
             return;
         }
 
+        // 以前の計算のリセット
+        if (is_calculated) {
+            foreach (ref x; node) {
+                x.distance = long.max;
+                x.path = x.vertex;
+            }
+        }
+
         node[start].distance = 0;
         node[start].path = start;
 
-        // 確定済みかどうか
+        // 確定済みかどうかをリセット
         foreach (ref x; is_comfirmed) {
             x = false;
         }
 
-        // 優先度付きキュー
+        // 優先度付きキューの宣言
         BinaryHeap!(Array!dijkstra_pair, "b.distance < a.distance") PQueue;
         PQueue.insert(node[start]);
 
@@ -84,15 +60,18 @@ struct Dijkstra(T) {
                 foreach (ref x; graph[begin.vertex]) {
                     if (node[begin.vertex].distance + weight[begin.vertex][x] < node[x].distance) {
                         node[x].distance = node[begin.vertex].distance + weight[begin.vertex][x];
+                        node[x].path = begin.vertex;
                         PQueue.insert(node[x]);
                     }
                 }
             }
         }
 
+        // 連結でない頂点も計算済みということにしておく
         foreach (ref x; is_comfirmed) {
             x = true;
         }
+
         is_calculated = true;
     }
 
