@@ -68,6 +68,10 @@ struct UnionFind(T) {
 
         T parx = root(x), pary = root(y);
 
+        if (parx == pary) {
+            return false;
+        }
+
         if (size[parx] > size[pary]) {
             size[parx] += size[pary];
             parent[pary] = parx;
