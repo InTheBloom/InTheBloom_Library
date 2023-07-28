@@ -7,8 +7,12 @@ long modPow (long a, long x, const int MOD) {
     a %= MOD; a += MOD; a %= MOD;
 
     // simple case
-    if (x == 0 || MOD == 1) {
+    if (MOD == 1) {
         return 0L;
+    }
+
+    if (x == 0) {
+        return 1L;
     }
 
     if (x == 1) {
