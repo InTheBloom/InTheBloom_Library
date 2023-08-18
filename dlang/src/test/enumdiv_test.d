@@ -1,13 +1,17 @@
 import std;
 
 void main () {
-    foreach (x; enumdiv(1_000_000_000_000)) {
+    foreach (x; enumDiv(1_000_000_000_000)) {
         writeln(x);
     }
-    writeln(enumdiv(100).empty);
+
+    writeln(enumDiv(100)[0]);
+    writeln(enumDiv(100)[0..5]);
+    writeln(enumDiv(100)[0..$]);
 }
 
-struct enumdiv {
+struct enumDiv {
+    int begin = 0, end;
     long[] div;
     this (long N) {
         foreach (x; 1..N+1) {
@@ -25,7 +29,21 @@ struct enumdiv {
         end = cast(int)div.length;
     }
 
-    int begin = 0, end;
+    size_t length () {
+        return div.length;
+    }
+
+    long opIndex (size_t i) {
+        return div[i];
+    }
+
+    long[] opSlice (size_t i, size_t j) {
+        return div[i..j];
+    }
+
+    size_t opDollar () {
+        return div.length;
+    }
 
     invariant () {
         assert(begin <= end);

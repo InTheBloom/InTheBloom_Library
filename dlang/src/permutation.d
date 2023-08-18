@@ -1,8 +1,7 @@
-import std.algorithm;
+bool nextPermutation(T) (T[] arr) {
+    import std.algorithm;
+    static assert(!isRandomAccessRange(T));
 
-// スライスを受け取って、インプレースで次の順列に並べ替える
-
-bool next_permutation(T) (T[] arr) {
     if (arr.length < 2) {
         return false;
     }
@@ -32,7 +31,10 @@ bool next_permutation(T) (T[] arr) {
     return true;
 }
 
-bool prev_permutation(T) (T[] arr) {
+bool prevPermutation(T) (T arr) {
+    import std.algorithm;
+    static assert(!isRandomAccessRange(T));
+
     if (arr.length < 2) {
         return false;
     }

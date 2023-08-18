@@ -3,7 +3,7 @@ long modPow (long a, long x, const int MOD) {
     assert(0 <= x);
     assert(1 <= MOD);
 
-    // preparation
+    // normalize
     a %= MOD; a += MOD; a %= MOD;
 
     // simple case
