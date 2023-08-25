@@ -14,6 +14,7 @@ struct SortedSet(T, S, alias less = binaryFun!("a.key < b.key")) {
     }
 
     void removeKey (T key) {
+        rbt.removeKey(SetNode(key));
     }
 
     SetNode front () {
