@@ -2,50 +2,55 @@ struct SegmentTree (T, T function (T, T) ope, T function () e) {
     /* ---------- variables ---------- */
     T[] X;
     size_t elemSize;
+    size_t arrSize;
 
     /* ---------- constructers ---------- */
     // construct by element size
     this (size_t elemSize) {
-        extend(elemSize);
+        this.elemSize = elemSize;
+        arrSize = extend(elemSize);
         allocate();
         build();
     }
 
     // construct by input range
     this (E) (E input) {
-        import std.range.primitives : hasLength, walkLength, isInputRange;
+        import std.range.primitives : hasLength, walkLength, isInputRange, ElementType;
         static assert(isInputRange!(E));
+        static assert(is(ElementType!(E) == T), format("\nThe element type of input range that builds the segment tree must be equal to T or upcastable.\nExpected : %s\nRecieved : %s", T.stringof, ElementType!(E).stringof));
 
         if (hasLength!(E)) {
-            extend(input.length);
+            this.elemSize = input.length;
         } else {
-            extend(walkLength(input));
+            this.elemSize = walkLength(input);
         }
+        this.arrSize = extend(this.elemSize);
         allocate();
 
         size_t i = 0;
-        foreach (ref elem; input) {
-            X[this.elemSize+i-1] = elem;
+        foreach (elem; input) {
+            X[this.arrSize+i-1] = elem;
             i++;
         }
 
         build();
     }
 
-    void extend (size_t sup) {
-        this.elemSize = 1;
-        while (this.elemSize < sup) {
-            this.elemSize *= 2;
+    size_t extend (size_t sup) {
+        size_t res = 1;
+        while (res < sup) {
+            res *= 2;
         }
+        return res;
     }
 
     void allocate () {
-        X = new T[](2*this.elemSize - 1);
-        X[this.elemSize-1..$] = e();
+        X = new T[](2*this.arrSize - 1);
+        X[this.arrSize-1..$] = e();
     }
 
     void build () {
-        for (long i = this.elemSize-2; 0 <= i; i--) {
+        for (long i = this.arrSize-2; 0 <= i; i--) {
             // calculate from parent node.
             X[i] = ope(X[2*i+1], X[2*i+2]);
         }
@@ -58,7 +63,7 @@ struct SegmentTree (T, T function (T, T) ope, T function () e) {
         auto errmsg = format("Line : %s, idx must be in the range [0, %s). Your input = %s.", __LINE__, this.elemSize, idx);
         enforce(0 <= idx && idx < this.elemSize, errmsg);
 
-        idx += this.elemSize-1;
+        idx += this.arrSize-1;
         X[idx] = val;
 
         while (0 < idx) {
@@ -71,7 +76,7 @@ struct SegmentTree (T, T function (T, T) ope, T function () e) {
         auto errmsg = format("Line : %s, idx must be in the range [0, %s). Your input = %s.", __LINE__, this.elemSize, idx);
         enforce(0 <= idx && idx < this.elemSize, errmsg);
 
-        idx += this.elemSize-1;
+        idx += this.arrSize-1;
         return X[idx];
     }
 
@@ -83,50 +88,39 @@ struct SegmentTree (T, T function (T, T) ope, T function () e) {
         enforce(0 <= r && r <= this.elemSize, errmsg2);
         enforce(l <= r, errmsg3);
 
-        T res = e();
-
         // simple cases
         if (l == r) {
-            return res;
+            return e();
         }
         if (l == 0 && r == elemSize) {
             return X[0];
         }
+        if (l+1 == r) {
+            return X[l];
+        }
 
         // convert closed interval
-        l += this.elemSize-1, r += this.elemSize-2;
+        l += this.arrSize-1, r += this.arrSize-2;
+
+        T leftProduct = e(), rightProduct = e();
 
         while (true) {
-            if (r < l) {
-                break;
-            }
-            if (l == r) {
-                res = ope(res, X[l]);
+            if (r <= l) {
                 break;
             }
 
             if (l % 2 == 0) {
-                res = ope(X[l], res);
+                leftProduct = ope(X[l], leftProduct);
                 l++;
             }
             if (r % 2 == 1) {
-                res = ope(res, X[r]);
+                rightProduct = ope(rightProduct, X[r]);
                 r--;
             }
             l = (l-1)/2;
             r = (r-1)/2;
         }
 
-        return res;
+        return ope(leftProduct, rightProduct);
     }
-}
-
-void main () {
-    import std.stdio;
-    import std.algorithm;
-    int[] x = [1, 3, 5, 7, 8];
-    auto seg = SegmentTree!(int, (a, b) => min(a, b), () => int.max)(x);
-
-    writeln(seg.X);
-    writeln(seg.prod(2, 5));
 }
