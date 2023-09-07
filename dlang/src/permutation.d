@@ -1,4 +1,4 @@
-bool nextPermutation(T) (T[] arr) {
+bool nextPermutation(T) (T arr) {
     import std.algorithm;
     static assert(!isRandomAccessRange(T));
 
