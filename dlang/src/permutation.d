@@ -1,6 +1,6 @@
 bool nextPermutation(T) (T arr) {
     import std.algorithm;
-    static assert(!isRandomAccessRange(T));
+    static assert(isRandomAccessRange!(T));
 
     if (arr.length < 2) {
         return false;
@@ -33,7 +33,7 @@ bool nextPermutation(T) (T arr) {
 
 bool prevPermutation(T) (T arr) {
     import std.algorithm;
-    static assert(!isRandomAccessRange(T));
+    static assert(isRandomAccessRange!(T));
 
     if (arr.length < 2) {
         return false;
