@@ -105,7 +105,7 @@ struct SegmentTree (T, T function (T, T) ope, T function () e) {
         T leftProduct = e(), rightProduct = e();
 
         while (true) {
-            if (r <= l) {
+            if (r < l) {
                 break;
             }
 
