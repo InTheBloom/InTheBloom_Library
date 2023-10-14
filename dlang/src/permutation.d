@@ -1,65 +1,63 @@
-bool nextPermutation(T) (T arr) {
-    import std.algorithm;
-    static assert(isRandomAccessRange!(T));
+bool NextPermutation (alias less = "a<b", T) (T array)
+if (is (T == E[], E) || is (T == E[n], E, size_t n))
+{
+    import std.algorithm : swap, reverse;
+    import std.functional : binaryFun;
 
-    if (arr.length < 2) {
-        return false;
-    }
+    alias is_a_less_than_b = binaryFun!(less);
 
     int i = -1, j;
-    foreach_reverse (idx; 1..arr.length) {
-        if (arr[idx - 1] < arr[idx]) {
-            i = cast(int)idx - 1;
+    foreach_reverse (idx; 1..array.length) {
+        if (is_a_less_than_b(array[idx-1], array[idx])) {
+            i = cast(int) (idx-1);
             break;
         }
     }
 
-    // 存在しない
-    if (i == -1) {
-        return false;
-    }
+    // Next permutation doesn't exists.
+    if (i == -1) return false;
 
-    foreach_reverse (idx; i+1..arr.length) {
-        if (arr[i] < arr[idx]) {
-            j = cast(int)idx;
+    foreach_reverse (idx; i+1..array.length) {
+        if (is_a_less_than_b(array[i], array[idx])) {
+            j = cast(int) idx;
             break;
         }
     }
 
-    swap(arr[i], arr[j]);
-    arr = arr[0..i+1] ~ arr[i+1..$].reverse;
+    swap(array[i], array[j]);
+    array[i+1..$].reverse;
+
     return true;
 }
 
-bool prevPermutation(T) (T arr) {
-    import std.algorithm;
-    static assert(isRandomAccessRange!(T));
+bool PrevPermutation (alias less = "a<b", T) (T array)
+if (is (T == E[], E) || is (T == E[n], E, size_t n))
+{
+    import std.algorithm : swap, reverse;
+    import std.functional : binaryFun;
 
-    if (arr.length < 2) {
-        return false;
-    }
+    alias is_a_less_than_b = binaryFun!(less);
 
     int i = -1, j;
-    foreach_reverse (idx; 1..arr.length) {
-        if (arr[idx] < arr[idx - 1]) {
-            i = cast(int)idx - 1;
+    foreach_reverse (idx; 0..array.length-1) {
+        if (is_a_less_than_b(array[idx+1], array[idx])) {
+            i = cast(int) idx;
             break;
         }
     }
 
-    // 存在しない
-    if (i == -1) {
-        return false;
-    }
+    // Previous permutation doesn't exists.
+    if (i == -1) return false;
 
-    foreach_reverse (idx; i+1..arr.length) {
-        if (arr[idx] < arr[i]) {
+    foreach_reverse (idx; i+1..array.length) {
+        if (is_a_less_than_b(array[idx], array[i])) {
             j = cast(int)idx;
             break;
         }
     }
 
-    swap(arr[i], arr[j]);
-    arr = arr[0..i+1] ~ arr[i+1..$].reverse;
+    swap(array[i], array[j]);
+    array[i+1..$].reverse;
+
     return true;
 }
