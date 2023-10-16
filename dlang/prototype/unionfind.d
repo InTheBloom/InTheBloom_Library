@@ -3,9 +3,10 @@
  *   - クラスの各関数の仕様をまとめる
  *   - コンストラクタ関数の仕様をまとめる
  *   - assertで落としたときにstderrにメッセージを表示
+ *   - 関数名を変えるかもしれん(uniteとareInSameGroupとの整合性が取れてなさすぎ)
  *
  * VERYFYIED
- *   - unionとareInSameGroup : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
+ *   - uniteとareInSameGroup : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
  *
  * UNVERYFYIED
  *   - countGroups
@@ -200,7 +201,7 @@ auto UnionFind (T) () {
 }
 
 import std.range.primitives : isInputRange;
-auto UnionFind (T, E) (E range) if (isInputRange!(E) || is(T == E[], E) || is(T == E[n], E, size_t n)) {
+auto UnionFind (T, E) (E range) if (isInputRange!(E) || is(T == S[], S) || is(T == S[n], S, size_t n)) {
     auto res = new UnionFind_Dictionary!(T)();
     foreach (elem; range) {
         res.addElement(elem);
