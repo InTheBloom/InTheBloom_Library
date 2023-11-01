@@ -1,0 +1,1 @@
+You can set your current directory to the same location as this file and run the test with `rdmd run_test.d`.
