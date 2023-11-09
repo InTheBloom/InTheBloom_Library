@@ -1,4 +1,13 @@
-import std.bigint;
+void main () {
+    import std.stdio;
+    alias ratio = rational!BigInt;
+    ratio sum;
+    for (int i = 1; i <= 50000; i++) {
+        sum += ratio(1, i);
+    }
+
+    writeln(sum);
+}
 
 /**
 ___
@@ -26,6 +35,7 @@ ___
 ___
  */
 
+import std.bigint;
 struct rational (T)
 if (
     is (T == int) ||
@@ -33,10 +43,9 @@ if (
     is (T == std.bigint.BigInt)
     )
 {
-    // Dependent on
+    // Depends on
     import std.exception : enforce;
     import std.format : format;
-    import std.numeric;
     import std.conv : to;
 
     T numerator;
@@ -71,7 +80,7 @@ if (
         if (-1 < numerator && numerator < 1) { numerator = 0; denominator = 1; return; }
 
         /* 互いに素にする */
-        auto GCD = std.numeric.gcd(numerator, denominator);
+        auto GCD = this.rational_gcd(numerator, denominator);
         if (1 < GCD) {
             numerator /= GCD; denominator /= GCD;
         }
@@ -98,11 +107,20 @@ if (
     const auto opBinary (string op : "+") (rational!T rhs)
     {
         /* (a/b) + (c/d) = (ad+bc)/bd */
-        return
-            rational!T(
-                (this.numerator * rhs.denominator) + (rhs.numerator * this.denominator),
-                (this.denominator * rhs.denominator)
-                );
+        /* boost/rationalの計算を参考にした。
+           (https://github.com/boostorg/rational/blob/develop/include/boost/rational.hpp) */
+        auto g = this.rational_gcd(this.denominator, rhs.denominator);
+
+        auto b1 = this.denominator / g;
+        auto d1 = rhs.denominator / g;
+
+        auto res = rational!T(0);
+        res.numerator = (this.numerator * d1) + (rhs.numerator * b1);
+        res.denominator = b1 * d1 * g;
+
+        auto div = this.rational_gcd(res.numerator, g);
+        res.numerator /= g, res.denominator /= g;
+        return res;
     }
 
     const auto opBinary (string op : "-") (rational!T rhs)
@@ -118,25 +136,39 @@ if (
         T den = this.denominator;
 
         // GCD1 = gcd(a, d), GCD2 = gcd(b, c)
-        auto GCD1 = std.numeric.gcd(num, rhs.denominator);
-        auto GCD2 = std.numeric.gcd(den, rhs.numerator);
+        auto GCD1 = this.rational_gcd(num, rhs.denominator);
+        auto GCD2 = this.rational_gcd(den, rhs.numerator);
 
         num /= GCD1;
         den /= GCD2;
 
         num *= rhs.numerator / GCD2; den *= rhs.denominator / GCD1;
 
-        return rational!T(num, den);
+        auto res = rational!T(0);
+        res.numerator = num, res.denominator = den;
+
+        return res;
     }
 
     const auto opBinary (string op : "/") (rational!T rhs)
     {
         /* (a/b) / (c/d) = (a/b) * (d/c) */
-        return opBinary!"*"(rational!T(rhs.denominator, rhs.numerator));
+        auto res = rational!T(0);
+        res.numerator = rhs.denominator, res.denominator = rhs.numerator;
+        return opBinary!"*"(res);
     }
 
     // いろんな型に対応させる。
     const auto opBinary (string op, E) (E rhs)
+    if ((op == "+" || op == "-" || op == "*" || op == "/") &&
+        __traits(compiles, rational!(T)(rhs)))
+    {
+        auto ret = rational!(T)(rhs);
+        return opBinary!(op)(ret);
+    }
+
+    /** -- opBinaryRight -- **/
+    const auto opBinaryRight (string op, E) (E rhs)
     if ((op == "+" || op == "-" || op == "*" || op == "/") &&
         __traits(compiles, rational!(T)(rhs)))
     {
@@ -150,14 +182,6 @@ if (
         denominator = rhs.denominator;
     }
 
-    void opAssign (E) (rational!E rhs)
-    if (__traits(compiles, rhs.numerator.to!(T) && rhs.denominator.to!(T)))
-    {
-        numerator = rhs.numerator.to!(T);
-        denominator = rhs.denominator.to!(T);
-        normalization();
-    }
-
     void opAssign (E) (E rhs)
     if (__traits(compiles, rhs.to!(T)))
     {
@@ -169,11 +193,12 @@ if (
     /** -- opOpAssign -- **/
     void opOpAssign (string op : "+") (rational!T rhs)
     {
-        this.numerator *= rhs.denominator;
-        this.numerator += this.denominator * rhs.numerator;
-
-        this.denominator *= rhs.denominator;
-        normalization();
+        auto g = this.rational_gcd(rhs.denominator, this.denominator);
+        this.denominator /= g;
+        this.numerator = this.numerator * (rhs.denominator / g) + rhs.numerator * this.denominator;
+        g = this.rational_gcd(this.numerator, g);
+        this.numerator /= g;
+        this.denominator *= rhs.denominator/g;
     }
 
     void opOpAssign (string op : "-") (rational!T rhs)
@@ -184,8 +209,8 @@ if (
 
     void opOpAssign (string op : "*") (rational!T rhs)
     {
-        auto GCD1 = std.numeric.gcd(numerator, rhs.denominator);
-        auto GCD2 = std.numeric.gcd(denominator, rhs.numerator);
+        auto GCD1 = this.rational_gcd(numerator, rhs.denominator);
+        auto GCD2 = this.rational_gcd(denominator, rhs.numerator);
 
         numerator /= GCD1; denominator /= GCD2;
 
@@ -231,28 +256,14 @@ if (
         real den = denominator.to!real;
         return num/den;
     }
-}
 
-void main () {
-    // verifying with ABC308C - Standings
-    solve();
-}
-
-void solve () {
-    import std;
-    int N = readln.chomp.to!int;
-    alias pair = Tuple!(rational!(long), "val", int, "idx");
-    pair[] person = new pair[](N);
-
-    foreach (i; 0..N) {
-        int A, B; readf!" %d %d"(A, B);
-        person[i].val = rational!(long)(A, A+B);
-        person[i].idx = i+1;
-    }
-
-    person.sort!((a, b) => (a.val == b.val ? a.idx < b.idx : a.val > b.val));
-
-    foreach (i, p; person) {
-        write(p.idx, (i == person.length-1 ? '\n' : ' '));
+    T rational_gcd (T x, T y) {
+        T tmp;
+        while (0 < y) {
+            tmp = y;
+            y = x % y;
+            x = tmp;
+        }
+        return x;
     }
 }
