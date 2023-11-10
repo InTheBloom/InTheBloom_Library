@@ -72,7 +72,7 @@ class UnionFind_Dictionary (T) {
 
     int GroupSize (T x) {
         addElement(x);
-        return size[x];
+        return size[findRoot(x)];
     }
 
     T[][] enumerateGroups (T x) {
@@ -147,7 +147,7 @@ class UnionFind_Array {
 
         if (larger == smaller) return;
 
-        parent[larger] = smaller;
+        parent[smaller] = larger;
         size[larger] += size[smaller];
     }
 
@@ -164,7 +164,7 @@ class UnionFind_Array {
         assert(0 <= x && x < N);
     }
     do {
-        return size[x];
+        return size[findRoot(x)];
     }
 
     int[][] enumerateGroups (int x)
