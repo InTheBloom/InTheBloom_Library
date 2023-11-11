@@ -34,7 +34,7 @@ class UnionFind_Dictionary (T) {
         return parent[x] = findRoot(parent[x]);
     }
 
-    bool areInSameGroup (T x, T y) {
+    bool same (T x, T y) {
         return findRoot(x) == findRoot(y);
     }
 
@@ -58,7 +58,7 @@ class UnionFind_Dictionary (T) {
     int countGroups () {
         int res = 0;
         foreach (key, val; parent) {
-            if (key == val) res++;
+            if (findRoot(key) == key) res++;
         }
         return res;
     }
@@ -78,14 +78,11 @@ class UnionFind_Dictionary (T) {
     T[][] enumerateGroups (T x) {
         T[][T] mp;
         foreach (key, val; parent) {
-            mp[val] ~= key;
+            mp[findRoot(key)] ~= key;
         }
 
-        T[][] res = new T[][](mp.length, 0);
-        int idx = 0;
         foreach (val; mp) {
-            res[idx] = val;
-            idx++;
+            res ~= val;
         }
 
         return res;
@@ -121,7 +118,7 @@ class UnionFind_Array {
         return parent[x] = findRoot(parent[x]);
     }
 
-    bool areInSameGroup (int x, int y)
+    bool same (int x, int y)
     in {
         assert(0 <= x && x < N);
         assert(0 <= y && y < N);
@@ -153,9 +150,7 @@ class UnionFind_Array {
 
     int countGroups () {
         int res = 0;
-        foreach (x, par; parent) {
-            if (x == par) res++;
-        }
+        foreach (i; 0..N) if (findRoot(i) == i) res++;
         return res;
     }
 
@@ -173,18 +168,14 @@ class UnionFind_Array {
     }
     do {
         int[][] mp = new int[][](N, 0);
-        int resSize = 0;
-        foreach (v, par; parent) {
-            if (mp[par].length == 0) resSize++;
-            mp[par] ~= cast(int) v;
+        foreach (i; 0..N)
+            mp[findRoot(i)] ~= i;
         }
 
         int[][] res = new int[][](resSize);
-        int idx = 0;
         foreach (m; mp) {
             if (m.length == 0) continue;
-            res[idx] = m;
-            idx++;
+            res ~= m;
         }
 
         return res;
