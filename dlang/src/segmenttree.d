@@ -1,126 +1,138 @@
-struct SegmentTree (T, T function (T, T) ope, T function () e) {
-    /* ---------- variables ---------- */
-    T[] X;
-    size_t elemSize;
-    size_t arrSize;
+import std.traits : ReturnType, isCallable, Parameters;
+import std.meta : AliasSeq;
 
-    /* ---------- constructers ---------- */
-    // construct by element size
-    this (size_t elemSize) {
-        this.elemSize = elemSize;
-        arrSize = extend(elemSize);
-        allocate();
+class SegmentTree (T, alias ope, alias e)
+if (
+           isCallable!(ope)
+        && isCallable!(e)
+        && is (ReturnType!(ope) == T)
+        && is (ReturnType!(e) == T)
+        && is (Parameters!(ope) == AliasSeq!(T, T))
+        && is (Parameters!(e) == AliasSeq!())
+        )
+{
+    /* 内部の配列が1-indexedで2冪のセグメントツリー */
+    import std.format : format;
+    T[] X;
+    size_t length;
+
+    /* --- Constructors --- */
+    this (size_t length_) {
+        adjust_array_length(length_);
+        for (size_t i = length; i < 2*length; i++) {
+            X[i] = e();
+        }
         build();
     }
 
-    // construct by input range
-    this (E) (E input) {
-        import std.range.primitives : hasLength, walkLength, isInputRange, ElementType;
-        static assert(isInputRange!(E));
-        static assert(is(ElementType!(E) == T), format("\nThe element type of input range that builds the segment tree must be equal to T or upcastable.\nExpected : %s\nRecieved : %s", T.stringof, ElementType!(E).stringof));
-
-        if (hasLength!(E)) {
-            this.elemSize = input.length;
-        } else {
-            this.elemSize = walkLength(input);
-        }
-        this.arrSize = extend(this.elemSize);
-        allocate();
-
-        size_t i = 0;
-        foreach (elem; input) {
-            X[this.arrSize+i-1] = elem;
+    import std.range.primitives : isInputRange;
+    this (R) (R Range)
+    if (isInputRange!(R) && is (ElementType!(R) == T))
+    {
+        adjust_array_length(walkLength(Range));
+        size_t i = length;
+        foreach (item; Range) {
+            X[i] = item;
             i++;
         }
-
+        while (i < 2*length) { X[i] = e(); i++; }
         build();
     }
 
-    size_t extend (size_t sup) {
-        size_t res = 1;
-        while (res < sup) {
-            res *= 2;
-        }
-        return res;
-    }
-
-    void allocate () {
-        X = new T[](2*this.arrSize - 1);
-        X[this.arrSize-1..$] = e();
-    }
-
-    void build () {
-        for (long i = this.arrSize-2; 0 <= i; i--) {
-            // calculate from parent node.
-            X[i] = ope(X[2*i+1], X[2*i+2]);
-        }
-    }
-
-    /* ---------- functions ---------- */
-    import std.exception : enforce;
-    import std.format : format;
-    void set (size_t idx, T val) {
-        auto errmsg = format("Line : %s, idx must be in the range [0, %s). Your input = %s.", __LINE__, this.elemSize, idx);
-        enforce(0 <= idx && idx < this.elemSize, errmsg);
-
-        idx += this.arrSize-1;
-        X[idx] = val;
-
-        while (0 < idx) {
-            idx = (idx-1)/2;
-            X[idx] = ope(X[2*idx+1], X[2*idx+2]);
-        }
-    }
-
-    T get (size_t idx) {
-        auto errmsg = format("Line : %s, idx must be in the range [0, %s). Your input = %s.", __LINE__, this.elemSize, idx);
-        enforce(0 <= idx && idx < this.elemSize, errmsg);
-
-        idx += this.arrSize-1;
-        return X[idx];
-    }
-
-    T prod (size_t l, size_t r) {
-        auto errmsg1 = format("Line : %s, l must be in the range [0, %s]. Your input = %s.", __LINE__, this.elemSize, l);
-        auto errmsg2 = format("Line : %s, r must be in the range [0, %s]. Your input = %s.", __LINE__, this.elemSize, r);
-        auto errmsg3 = format("Line : %s, l must less than or equal to r. Your input = (l = %s, r = %s)", __LINE__, l, r);
-        enforce(0 <= l && l <= this.elemSize, errmsg1);
-        enforce(0 <= r && r <= this.elemSize, errmsg2);
-        enforce(l <= r, errmsg3);
-
-        // simple cases
-        if (l == r) {
-            return e();
-        }
-        if (l == 0 && r == elemSize) {
-            return X[0];
-        }
-        if (l+1 == r) {
-            return X[l];
+    /* --- Functions --- */
+    private 
+        void adjust_array_length (size_t length_) {
+            length = 1;
+            while (length <= length_) length *= 2;
+            X = new T[](2*length);
         }
 
-        // convert closed interval
-        l += this.arrSize-1, r += this.arrSize-2;
+        void set_with_no_update (size_t idx, T val)
+        in {
+            assert(idx < length,
+                    format("In function \"set_with_no_update\", idx is out of range. (length = %s idx = %s)", length, idx));
+        }
+        do {
+            X[length+idx] = val;
+        }
 
-        T leftProduct = e(), rightProduct = e();
+        void build () {
+            for (size_t i = length-1; 1 <= i; i--) {
+                X[i] = ope(X[2*i], X[2*i+1]);
+            }
+        }
 
-        while (true) {
-            if (r < l) {
-                break;
+    public
+        override string toString () {
+            string res = "";
+            int level = 1;
+            while ((2^^(level-1)) < X.length) {
+                res ~= format("level: %2s | ", level);
+                for (size_t i = (2^^(level-1)); i < (2^^level); i++) {
+                    res ~= format("%s%s", X[i], (i == (2^^level)-1 ? "\n" : " "));
+                }
+                level++;
+            }
+            return res;
+        }
+
+        void set (size_t idx, T val)
+        in {
+            assert(idx < length,
+                    format("In function \"set\", idx is out of range. (length = %s idx = %s)", length, idx));
+        }
+        do {
+            idx += length;
+            X[idx] = val;
+            while (2 <= idx) {
+                idx /= 2;
+                X[idx] = ope(X[2*idx], X[2*idx+1]);
+            }
+        }
+
+        T get (size_t idx)
+        in {
+            assert(idx < length,
+                    format("In function \"get\", idx is out of range. (length = %s idx = %s)", length, idx));
+        }
+        do {
+            idx += length;
+            return X[idx];
+        }
+
+        T prod (size_t l, size_t r)
+        in {
+            assert(l < length,
+                    format("In function \"prod\", l is out of range. (length = %s l = %s)", length, l));
+            assert(r <= length,
+                    format("In function \"prod\", r is out of range. (length = %s r = %s)", length, r));
+            assert(l < r,
+                    format("In function \"prod\", l < r must be satisfied. (length = %s l = %s, r = %s)", length, l, r));
+        }
+        do {
+            /* Returns all prod O(1) */
+            if (l == 0 && r == length) return X[1];
+
+            /* Closed interval [l, r] */
+            r--;
+            l += length, r += length;
+            T LeftProd, RightProd;
+            LeftProd = RightProd = e();
+
+            while (l <= r) {
+                if (l % 2 == 1) {
+                    LeftProd = ope(LeftProd, X[l]);
+                    l++;
+                }
+                if (r % 2 == 0) {
+                    RightProd = ope(X[r], RightProd);
+                    r--;
+                }
+
+                l /= 2;
+                r /= 2;
             }
 
-            if (l % 2 == 0) {
-                leftProduct = ope(X[l], leftProduct);
-                l++;
-            }
-            if (r % 2 == 1) {
-                rightProduct = ope(rightProduct, X[r]);
-                r--;
-            }
-            l = (l-1)/2;
-            r = (r-1)/2;
+            return ope(LeftProd, RightProd);
         }
-
-        return ope(leftProduct, rightProduct);
-    }
 }
