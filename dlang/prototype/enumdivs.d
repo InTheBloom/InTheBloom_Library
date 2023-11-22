@@ -1,40 +1,35 @@
 struct enumDivs {
-    import std.algorithm;
-    import std.exception;
-    import std.format;
-    long[][] div;
+    import std.algorithm : sort;
+    import std.exception : enforce;
+    import std.format : format;
+
+    int begin = 0, end;
+    long[] divs;
 
     this (long N) {
-        auto msg = format("Line : %s, N must be greater than or equal to 0. Your input = %s.", __LINE__, N);
-        enforce(0 <= N, msg);
+        enforce(1 <= N, format("N must satisfy 1 <= N. Now N = %s", N));
+        divs = new long[](N+1);
 
-        div = new long[][](N+1, 0);
-        foreach (x; 1..N+1) {
-            if (N < x*x) {
-                break;
-            }
-
-            long y = 1;
-            while (x*y <= N) {
-                div[x*y] ~= x;
-                y++;
+        for (int x = 1; x <= N; x++) {
+            int j = 1;
+            while (1L*x*j <= N) {
+                divs[x*j] ~= x;
+                j++;
             }
         }
+        end = cast(int) divs.length;
     }
 
-    size_t length () {
-        return div.length;
-    }
+    long[] opIndex (size_t i) { return divs[i]; }
+    long[][] opSlice (size_t i, size_t j) { return divs[i..j]; }
+    size_t opDollar () { return divs.length; }
 
-    long[] opIndex (size_t i) {
-        return div[i];
-    }
+    size_t length () const { return div.length; }
+    bool empty () const { return begin == end; }
 
-    long[][] opSlice (size_t i, size_t j) {
-        return div[i..j];
-    }
+    long[] front () const { return div[begin]; }
+    void popFront() { begin++; }
 
-    size_t opDollar () {
-        return div.length;
-    }
+    long[] back () const { return div[end - 1]; }
+    void popBack () { end--; }
 }

@@ -1,8 +1,8 @@
 import std;
 
 void main () {
-    foreach (x; enumDiv(1_000_000_000_000)) {
-        writeln(x);
+    foreach (i, x; enumDiv(1_000_000_000_000)) {
+        writeln(i, "th divisor is ", x);
     }
 
     writeln(enumDiv(100)[0]);
@@ -35,6 +35,14 @@ struct enumDiv {
     long opIndex (size_t i) { return div[i]; }
     long[] opSlice (size_t i, size_t j) { return div[i..j]; }
     size_t opDollar () { return div.length; }
+    int opApply (int delegate (ref size_t, long) dg) {
+        int result = 0;
+        foreach (i, d; div) {
+            result = dg(i, d);
+            if (0 < result) break;
+        }
+        return result;
+    }
 
     size_t length () const { return div.length; }
     bool empty () const { return begin == end; }
