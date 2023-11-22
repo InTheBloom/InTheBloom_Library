@@ -23,10 +23,18 @@ struct enumDiv {
     long opIndex (size_t i) { return div[i]; }
     long[] opSlice (size_t i, size_t j) { return div[i..j]; }
     size_t opDollar () { return div.length; }
-    int opApply (int delegate (ref size_t, long) dg) {
+    int opApply (int delegate (ref size_t, ref const long) dg) {
         int result = 0;
-        foreach (i, d; div) {
+        foreach (ref i, ref d; div) {
             result = dg(i, d);
+            if (0 < result) break;
+        }
+        return result;
+    }
+    int opApply (int delegate (ref const long) dg) {
+        int result = 0;
+        foreach (ref d; div) {
+            result = dg(d);
             if (0 < result) break;
         }
         return result;

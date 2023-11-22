@@ -1,19 +1,3 @@
-import std;
-
-void main () {
-    auto e = enumDivs(10);
-    foreach (ee; e) {
-        writeln(ee);
-    }
-
-    foreach (i, ee; e) {
-        writeln("divisor of ", i+1, " is ", ee);
-    }
-
-    writeln(e[1..5]);
-    writeln(e[3..$]);
-}
-
 struct enumDivs {
     import std.algorithm : sort;
     import std.exception : enforce;
