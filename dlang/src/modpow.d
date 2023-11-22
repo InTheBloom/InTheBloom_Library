@@ -1,35 +1,45 @@
-long modPow (long a, long x, const int MOD) {
-    // assertion
-    assert(0 <= x);
-    assert(1 <= MOD);
+long modPow (long a, long x, const long MOD) {
+    import std.exception : enforce;
+
+    enforce(0 <= x, "x must satisfy 0 <= x");
+    enforce(1 <= MOD, "MOD must satisfy 1 <= MOD");
+    enforce(MOD <= int.max, "MOD must satisfy MOD*MOD <= long.max");
 
     // normalize
     a %= MOD; a += MOD; a %= MOD;
 
-    // simple case
-    if (MOD == 1) {
-        return 0L;
-    }
-
-    if (x == 0) {
-        return 1L;
-    }
-
-    if (x == 1) {
-        return a;
-    }
-
-    // calculate
     long res = 1L;
-    long base = a % MOD;
-    while (x != 0) {
-        if ((x&1) != 0) {
-            res *= base;
-            res %= MOD;
-        }
-        base = base*base; base %= MOD;
+    long base = a;
+    while (0 < x) {
+        if (0 < (x&1)) (res *= base) %= MOD;
+        (base *= base) %= MOD;
         x >>= 1;
     }
 
-    return res;
+    return res % MOD;
+}
+
+T modPow (T, X, Y) (T a, X x, Y MOD)
+if (
+        __traits(compiles, x&1, x >>= 1) &&
+        __traits(compiles, a %= MOD, a += MOD, a %= MOD, a = 1)
+    )
+{
+    import std.exception: enforce;
+
+    enforce(0 <= x, "x must satisfy 0 <= x");
+    enforce(1 <= MOD, "MOD must satisfy 1 <= MOD");
+
+    // normalize
+    a %= MOD; a += MOD; a %= MOD;
+
+    T res = 1;
+    T base = a;
+    while (0 < x) {
+        if (0 < (x&1)) (res *= base) %= MOD;
+        (base *= base) %= MOD;
+        x >>= 1;
+    }
+
+    return res % MOD;
 }
