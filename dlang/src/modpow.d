@@ -19,12 +19,7 @@ long modPow (long a, long x, const long MOD) {
     return res % MOD;
 }
 
-T modPow (T, X, Y) (T a, X x, Y MOD)
-if (
-        __traits(compiles, x&1, x >>= 1) &&
-        __traits(compiles, a %= MOD, a += MOD, a %= MOD, a = 1)
-    )
-{
+T modPow (T, X, Y) (T a, X x, Y MOD) {
     import std.exception: enforce;
 
     enforce(0 <= x, "x must satisfy 0 <= x");
