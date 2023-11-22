@@ -1,15 +1,3 @@
-import std;
-
-void main () {
-    foreach (x; enumDiv(1_000_000_000_000)) {
-        writeln(x);
-    }
-
-    writeln(enumDiv(100)[0]);
-    writeln(enumDiv(100)[0..5]);
-    writeln(enumDiv(100)[0..$]);
-}
-
 struct enumDiv {
     import std.algorithm : sort;
     import std.exception : enforce;

@@ -1,4 +1,4 @@
-long modPow (long a, long x, const long MOD) {
+long modPow (ref long a, ref long x, ref const long MOD) {
     import std.exception : enforce;
 
     enforce(0 <= x, "x must satisfy 0 <= x");
@@ -19,7 +19,7 @@ long modPow (long a, long x, const long MOD) {
     return res % MOD;
 }
 
-T modPow (T, X, Y) (T a, X x, Y MOD) {
+T modPow (T, X, Y) (ref T a, ref X x, ref const Y MOD) {
     import std.exception: enforce;
 
     enforce(0 <= x, "x must satisfy 0 <= x");
