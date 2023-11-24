@@ -1,13 +1,13 @@
 void main () {
     import std.stdio;
-    alias ratio = rational!BigInt;
+    alias ratio = rational!long;
     ratio sum;
-    for (int i = 20; i <= 30; i++) {
+    for (int i = 20; i <= 25; i++) {
         sum += ratio(1, i*i);
     }
 
     writeln(sum);
-    writeln(sum.toDecimal(10));
+    writeln(sum.toDecimal(100));
 }
 
 /**
@@ -252,17 +252,17 @@ if (
         return 0;
     }
 
-    real toDecimal (size_t digits = 10) {
+    string toDecimal (size_t digits = 10) {
         string res;
         auto num = numerator;
         auto den = denominator;
         foreach (i; 0..digits) {
-            res ~= (num/den).toDecimalString;
+            res ~= (num/den).to!string;
             if (i == 0) res ~= '.';
             num %= den;
             num *= 10;
         }
-        return res.to!real;
+        return res;
     }
 
     T rational_gcd (T x, T y) {
