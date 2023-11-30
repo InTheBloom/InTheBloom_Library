@@ -44,7 +44,7 @@ struct SubsetItems (T) {
     this (T arr) {
         this.arr = arr.dup;
         res = new E(arr.length);
-        subsets = enumSubset(arr.length);
+        subsets = enumSubset(cast(int) arr.length);
     }
 
     auto front () const { return res[0..right]; }
