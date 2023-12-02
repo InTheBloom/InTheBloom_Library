@@ -39,7 +39,7 @@ struct CombinationItems (T) {
     this (T arr, int k) {
         this.arr = arr.dup;
         res = new E(k);
-        comb = enumComb(arr.length, k);
+        comb = enumComb(cast(int) arr.length, k);
         int i = 0;
         foreach (c; comb.front) res[i++] = arr[c];
     }
