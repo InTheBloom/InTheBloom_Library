@@ -47,7 +47,7 @@ if (
             X = new T[](2*length);
         }
 
-        void set_with_no_update (size_t idx, ref T val)
+        void set_with_no_update (size_t idx, T val)
         in {
             assert(idx < length,
                     format("In function \"set_with_no_update\", idx is out of range. (length = %s idx = %s)", length, idx));
@@ -76,7 +76,7 @@ if (
             return res;
         }
 
-        void set (size_t idx, ref T val)
+        void set (size_t idx, T val)
         in {
             assert(idx < length,
                     format("In function \"set\", idx is out of range. (length = %s idx = %s)", length, idx));
