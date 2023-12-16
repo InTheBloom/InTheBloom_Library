@@ -1,81 +1,60 @@
-struct enumSubset_(T) {
-    import std.exception;
-    import std.format;
-    import std.range.primitives : ElementType;
-    long elemSize;
-    long sup;
-    long bit = 0L;
-    int[] idx;
-    enum bool isNumeric = __traits(isIntegral, T);
-    static if (!isNumeric) {
-        alias E = ElementType!(T);
-        E[] res;
-        T arr;
+import std.format : format;
+import std.exception : enforce;
+
+struct SubsetIndexes {
+    long bit;
+    int right;
+    long MAX;
+    int[] res;
+    this (size_t N) {
+        MAX = 1<<N;
+        res = new int[](N);
+        right = 0;
     }
 
-    this (T X) {
-        static if (isNumeric) {
-            auto errmsg = format("LINE: %s, elemSize must be positive integer: your input is %s", __LINE__, elemSize);
-            enforce(0 <= X, errmsg);
-            this.elemSize = X;
-        } else {
-            static assert(__traits(compiles, isRandomAccessRange!(T)) || is(T == E[n], E, size_t n) || is(T == E[], E),
-                    "T must be Integral type or RandomAccessRange. Now T = ", T.stringof);
-            this.elemSize = X.length;
-            arr = X;
-            res = new E[](this.elemSize);
-        }
-        sup = 1L << elemSize;
-        idx = new int[](elemSize);
-    }
-
-    bool empty() const {
-        return sup <= bit;
-    }
-
-    void popFront() {
+    auto front () const { return res[0..right]; }
+    bool empty () const { return bit == MAX; }
+    void popFront () {
         bit++;
-    }
-    static if (isNumeric) {
-        int[] front() {
-            int i = 0;
-            for (long mask = 1, index = 0; mask < sup; mask <<= 1, index++) {
-                if (0 < (mask&bit)) {
-                    idx[i++] = cast(int) index;
-                }
-            }
-            return idx[0..i];
-        }
-    } else {
-        E[] front() {
-            int i = 0;
-            for (long mask = 1, index = 0; mask < sup; mask <<= 1, index++) {
-                if (0 < (mask&bit)) {
-                    res[i++] = arr[index];
-                }
-            }
-            return res[0..i];
-        }
+        int i = 0;
+        for (int j = 1, val = 0; j < MAX; j <<= 1, val++) if (0 < (j&bit)) res[i++] = val;
+        right = i;
     }
 }
 
-auto enumSubset(T) (T X) {
-    return enumSubset_!(T)(X);
+struct SubsetItems (T) {
+    import std.traits : ForeachType, Unconst;
+    alias E = Unconst!(ForeachType!T)[];
+    E arr;
+    E res;
+    int right;
+    SubsetIndexes subsets;
+    this (T arr) {
+        this.arr = arr.dup;
+        res = new E(arr.length);
+        subsets = enumSubset(arr.length);
+    }
+
+    auto front () const { return res[0..right]; }
+    bool empty () const { return subsets.empty; }
+    void popFront () {
+        subsets.popFront;
+        int i = 0;
+        foreach (s; subsets.front) res[i++] = arr[s];
+        right = i;
+    }
 }
 
-void main () {
-    import std.stdio;
-    auto s1 = enumSubset(3);
-    auto s2 = enumSubset([1, 2, 3]);
-    auto s3 = enumSubset("abc");
+auto enumSubset (T) (T arr)
+if (is (T == E[], E) || is (T == E[n], E, size_t n))
+{
+    return SubsetItems!(T)(arr);
+}
 
-    foreach (s; s1) {
-        writeln(s);
-    }
-    foreach (s; s2) {
-        writeln(s);
-    }
-    foreach (s; s3) {
-        writeln(s);
-    }
+auto enumSubset (size_t N)
+in {
+    enforce(0 <= N && N <= 60, format("N must satisfy 0 <= N <= 60. Now N = %s.", N));
+}
+do {
+    return SubsetIndexes(N);
 }
