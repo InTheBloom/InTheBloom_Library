@@ -106,12 +106,13 @@ if (
                     format("In function \"prod\", l is out of range. (length = %s l = %s)", length, l));
             assert(r <= length,
                     format("In function \"prod\", r is out of range. (length = %s r = %s)", length, r));
-            assert(l < r,
+            assert(l <= r,
                     format("In function \"prod\", l < r must be satisfied. (length = %s l = %s, r = %s)", length, l, r));
         }
         do {
             /* Returns all prod O(1) */
             if (l == 0 && r == length) return X[1];
+            if (l == r) return e();
 
             /* Closed interval [l, r] */
             r--;
