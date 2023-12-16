@@ -73,12 +73,12 @@ class UnionFind_Dictionary (T) {
     }
 }
 
-auto UnionFind_Any (T) () {
+auto UnionFind (T) () {
     return new UnionFind_Dictionary!(T)();
 }
 
 import std.range.primitives : isInputRange;
-auto UnionFind_Any (T, E) (E range) if (isInputRange!(E) || is(T == S[], S) || is(T == S[n], S, size_t n)) {
+auto UnionFind (T, E) (E range) if (isInputRange!(E) || is(T == S[], S) || is(T == S[n], S, size_t n)) {
     auto res = new UnionFind_Dictionary!(T)();
     foreach (elem; range) {
         res.addElement(elem);
