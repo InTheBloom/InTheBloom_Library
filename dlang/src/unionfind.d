@@ -1,93 +1,126 @@
-struct UnionFind(T) {
-    T[T] parent;
-    int[T] size;
+/**
+ * TODO
+ *   - assertで落としたときにstderrにメッセージを表示
+ *   - リセット機能をつける
+ *
+ * VERYFYIED
+ *   - uniteとsame : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
+ *
+ * UNVERYFYIED
+ *   - countGroups
+ *   - GroupSize
+ *   - enumGroups
+ */
 
-    // どの要素が一番上の親かを返す。途中経由した頂点もparentの内容がすべて更新される。
-    T root (T x) {
-        if (x !in parent) {
-            parent[x] = x;
-            size[x] = 1;
-            return x;
+class UnionFind_Array {
+    private:
+        int N;
+        int[] parent;
+        int[] size;
+
+    this (int N)
+    in {
+        assert(0 <= N, "N must be positive integer.");
+    }
+    do {
+        this.N = N;
+        parent = new int[](N);
+        size = new int[](N);
+        foreach (i; 0..N) {
+            parent[i] = i;
+            size[i] = 1;
         }
-        if (parent[x] != x) {
-            parent[x] = root(parent[x]);
-        }
-        return parent[x];
     }
 
-    // 素集合の数を返す。
-    int num_of_group () {
-        int ret = 0;
-        foreach (key, elem; parent) {
-            if (key == elem) {
-                ret++;
-            }
-        }
-        return ret;
+    int root (int x) 
+    in {
+        assert(0 <= x && x < N);
+    }
+    do {
+        if (parent[x] == x) return x;
+        return parent[x] = root(parent[x]);
     }
 
-    // 素集合系に要素を(要素数1の集合として)登録する。
-    // これをしないと孤立した頂点は系に存在しないものとして扱われ、num_of_group()が正常に動かない。
-    // 他の関数は影響を受けない。
-    bool register (T x) {
-        if (x !in parent) {
-            parent[x] = x;
-            size[x] = 1;
-        }
-        return false;
+    bool same (int x, int y)
+    in {
+        assert(0 <= x && x < N);
+        assert(0 <= y && y < N);
+    }
+    do {
+        return root(x) == root(y);
     }
 
-    // ２つの要素が同一集合に属しているかを判定する。
-    bool is_same_group (T x, T y) {
-        if (x == y) {
-            return true;
-        }
-
-        if (x !in parent || y !in parent) {
-            return false;
-        }
-
-        T parx = root(x), pary = root(y);
-        return parx == pary;
+    void unite (int x, int y)
+    in {
+        assert(0 <= x && x < N);
+        assert(0 <= y && y < N);
     }
-
-    // それぞれの要素が属する集合を併合する。
-    bool merge_group (T x, T y) {
-        if (x == y) {
-            return false;
-        }
-
-        if (x !in parent) {
-            parent[x] = x;
-            size[x] = 1;
-        }
-        if (y !in parent) {
-            parent[y] = y;
-            size[y] = 1;
-        }
-
-        T parx = root(x), pary = root(y);
-
-        if (parx == pary) {
-            return false;
-        }
-
-        if (size[parx] > size[pary]) {
-            size[parx] += size[pary];
-            parent[pary] = parx;
+    do {
+        int larger, smaller;
+        if (GroupSize(x) <= GroupSize(y)) {
+            larger = root(y);
+            smaller = root(x);
         } else {
-            size[pary] += size[parx];
-            parent[parx] = pary;
+            larger = root(x);
+            smaller = root(y);
         }
 
-        return true;
+        if (larger == smaller) return;
+
+        parent[smaller] = larger;
+        size[larger] += size[smaller];
     }
 
-    // 要素が属する集合の要素数を返す。
-    int sizeof_group (T x) {
-        if (x !in parent) {
-            return 1;
-        }
+    int countGroups () {
+        int res = 0;
+        foreach (i; 0..N) if (root(i) == i) res++;
+        return res;
+    }
+
+    int GroupSize (int x)
+    in {
+        assert(0 <= x && x < N);
+    }
+    do {
         return size[root(x)];
     }
+
+    int[][] enumGroups (int x)
+    in {
+        assert(0 <= x && x < N);
+    }
+    do {
+        int[][] mp = new int[][](N, 0);
+        foreach (i; 0..N) {
+            mp[root(i)] ~= i;
+        }
+
+        int[][] res;
+        foreach (m; mp) {
+            if (m.length == 0) continue;
+            res ~= m;
+        }
+
+        return res;
+    }
+
+    void reset (int N = this.N)
+    in {
+        assert(0 <= N, "N must be positive integer.");
+    }
+    do {
+        if (N != this.N) {
+            this.N = N;
+            parent.length = size.length = N;
+        }
+
+        foreach (i; 0..N) {
+            parent[i] = i;
+            size[i] = 1;
+        }
+    }
+}
+
+auto UnionFind (int N) {
+    return new UnionFind_Array(N);
 }
