@@ -1,98 +1,72 @@
-struct enumComb_(T) {
-    import std.exception;
-    import std.format;
-    import std.range.primitives : ElementType, isRandomAccessRange;
-    long N, K;
-    long[] idx;
-    bool isEmpty;
-    enum bool isNumeric = __traits(isIntegral, T);
-    static if (!isNumeric) {
-        static assert(__traits(compiles, isRandomAccessRange!(T)) || is(T == E[n], E, size_t n) || is(T == E[], E),
-                "T must be Integral type or RandomAccessRange. Now T = ", T.stringof);
-        alias E = ElementType!(T);
-        E[] res;
-        T arr;
+import std.format : format;
+import std.exception : enforce;
+
+struct CombinationIndexes {
+    size_t n, k;
+    size_t[] res;
+    bool end = false;
+
+    this (size_t n, size_t k) {
+        this.n = n, this.k = k;
+        if (n < k) end = true;
+        if (k == 0) end = true;
+        res = new size_t[](k);
+        foreach (i; 0..k) res[i] = i;
     }
 
-    this (T N, long K) {
-        static if (isNumeric) {
-            auto msgN = format("Line : %s, N must be greater than or equal to 0. your input = %s", __LINE__, N);
-            enforce(0 <= N, msgN);
-            this.N = N;
-        } else {
-            this.N = N.length;
-            arr = N;
-            res = new E[](K);
-        }
-        auto msgK = format("Line : %s, K must be greater than or equal to 0. your input = %s", __LINE__, K);
-        enforce(0 <= K, msgK);
-
-        this.K = K;
-        idx = new long[](K);
-
-        init();
-    }
-
-    void init () {
-        foreach (i; 0..K) {
-            idx[i] = i;
-        }
-        if (N < K) {
-            isEmpty = true;
-        }
-    }
-
-    bool empty() const {
-        return isEmpty;
-    }
-
-    static if (isNumeric) {
-        long[] front() {
-            return idx;
-        }
-    } else {
-        E[] front () {
-            foreach (i, x; idx) {
-                res[i] = arr[x];
+    bool empty () const { return end; }
+    auto front () const { return res; }
+    void popFront () {
+        bool ok = false;
+        if (res[$-1] < n-1) { res[$-1]++; ok = true; return; }
+        foreach_reverse (i; 0..k-1) {
+            if (res[i]+1 < res[i+1]) {
+                res[i]++;
+                int diff = 1;
+                foreach (j; i+1..k) { res[j] = res[i]+diff; diff++; }
+                return;
             }
-            return res;
         }
-    }
-
-    void popFront() {
-        long index;
-        (){
-            foreach (i; 0..K) {
-                if (idx[$-i-1] < N-i-1) {
-                    idx[$-i-1]++;
-                    index = K-i-1;
-                    return;
-                }
-            }
-            // there is no choice :(
-            isEmpty = true;
-        }();
-
-        foreach (i; index+1..K) {
-            idx[i] = idx[i-1] + 1;
-        }
+        end = true;
     }
 }
 
-auto enumComb(T) (T N, long K) {
-    return enumComb_!(T)(N, K);
+struct CombinationItems (T) {
+    import std.traits : ForeachType, Unconst;
+    alias E = Unconst!(ForeachType!T)[];
+    E arr;
+    E res;
+    CombinationIndexes comb;
+    this (T arr, size_t k) {
+        this.arr = arr.dup;
+        res = new E(k);
+        comb = enumComb(cast(int) arr.length, k);
+        int i = 0;
+        foreach (c; comb.front) res[i++] = arr[c];
+    }
+
+    bool empty () const { return comb.empty; }
+    void popFront () {
+        comb.popFront;
+        int i = 0;
+        foreach (c; comb.front) res[i++] = arr[c];
+    }
+    auto front () const { return res; }
 }
 
-void main () {
-    import std.stdio;
+auto enumComb (T) (T arr, size_t k)
+if (is (T == E[], E) || is (T == E[n], E, size_t n))
+in {
+    enforce(0 <= k, format("k must satisfy 0 <= n && 0 <= k. Now k = %s.", k));
+}
+do {
+    return CombinationItems!(T)(arr, k);
+}
 
-    auto e1 = enumComb(4, 2);
-    auto e2 = enumComb("abcd", 2);
-
-    foreach (ee; e1) {
-        writeln(ee);
-    }
-    foreach (ee; e2) {
-        writeln(ee);
-    }
+auto enumComb (size_t n, size_t k)
+in {
+    enforce(0 <= n && 0 <= k, format("n, k must satisfy 0 <= n && 0 <= k. Now n = %s, k = %s.", n, k));
+}
+do {
+    return CombinationIndexes(n, k);
 }
