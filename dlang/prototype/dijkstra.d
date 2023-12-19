@@ -1,94 +1,64 @@
-struct Dijkstra {
-    /* data */
-    int[][] graph;
-    long[int][] weight;
-    bool is_calc = false;
+class Dijkstra
+{
+    import std.container : BinaryHeap;
+    import std.typecons;
+    import std.format : format;
 
-    struct dijkstra_node {
-        int vertex;
-        long distance;
-        int path;
+    size_t N;
+    long[] cost;
+    size_t[][] graph;
+    long delegate (int, int) getCost;
+    BinaryHeap!(Tuple!(size_t, long)[], "b[1]<a[1]") PQ;
+
+    this (size_t N) {
+        this.N = N;
+        graph = new size_t[][](N, 0);
+        cost = new long[](N);
+
+        Tuple!(size_t, long)[] buf; buf.reserve(N);
+        PQ = buf;
+
+        cost[] = long.max;
     }
 
-    dijkstra_node[] node;
+    // cost setter
+    void setCostFunc (long delegate (int, int) func) { this.getCost = func; }
 
-    /* methods */
-
-    this (int N) {
-        assert(0 <= N);
-        graph = new int[][](N, 0);
-        foreach (i; 0..N) {
-            node[i] = dijkstra_node(i, long.max, i);
-        }
+    void addEdge (size_t u, size_t v)
+    in {
+        assert(u < N, format("Dijkstra.addEdge : out of range. N = %s, u = %s.", N, u));
+        assert(v < N, format("Dijkstra.addEdge : out of range. N = %s, v = %s.", N, v));
     }
-
-    // u, v must be 0-indexed integer.
-    void input (int u, int v, long w) {
-        assert(0 <= u);
-        assert(0 <= v);
-        assert(0 <= w);
-
-        if (graph.length <= max(u, v)) {
-            graph.length = max(u, v) + 1;
-        }
+    do {
         graph[u] ~= v;
-        weight[u][v] = w;
-
-        if (dijkstra_node.length <= max(u, v)) {
-            dijkstra_node.length = max(u, v) + 1;
-            node[u] = dijkstra_node(u, long.max, u);
-            node[v] = dijkstra_node(v, long.max, v);
-        }
+    }
+    void setStartPoint (size_t v, long W)
+    in {
+        assert(v < N, format("Dijkstra.addEdge : out of range. N = %s, u = %s.", N, v));
+    }
+    do {
+        PQ.insert(tuple(v, W));
     }
 
-    void calc (int start) {
-        assert(start < graph.length);
-
-        if (is_calc) {
-            foreach (ref x; node) {
-                x.distance = long.max;
-                x.path = x.vertex;
-            }
-        }
-
-        node[start].distance = 0;
-
-        BinaryHeap!(dijkstra_node, "b.distance < a.distance") PQ = [];
-        PQ.insert(node[start]);
-
+    const(long[]) run ()
+    in {
+        assert(getCost != null, "Dijkstra.run : function getCost is undefined.");
+    }
+    do {
         while (!PQ.empty) {
-            auto begin = PQ.front; PQ.removeFront;
-            if (node[begin.vertex].distance < begin.distance) {
-                continue;
-            }
-            node[begin.vertex] = begin;
+            auto head = PQ.front; PQ.removeFront;
+            size_t v = head[0]; long w = head[1];
+            if (cost[v] < w) continue;
 
-            foreach (ref x; graph[begin.vertex]) {
-                if (node[begin.vertex].distance + weight[begin.vertex][x] < node[x].distance) {
-                    node[x].distance = node[begin.vertex].distance + weight[begin.vertex][x];
-                    node[x].path = begin.vertex;
-                    PQ.insert(node[x]);
-                }
+            cost[v] = w;
+            foreach (to; graph[v]) {
+                long NewCost = cost[v] + getCost(cast(int) v, cast(int) to);
+                if (cost[to] <= NewCost) continue;
+                cost[to] = NewCost;
+                PQ.insert(tuple(to, NewCost));
             }
         }
-    }
 
-    int[] trace (int end) {
-        DList!int Q;
-        int v = end;
-        while (node[v].path != v) {
-            Q.insertFront(v);
-            v = node[v].path
-        }
-        Q.insertFront(v);
-        int[] res;
-        while (!Q.empty) {
-            res ~= Q.front; Q.removeFront;
-        }
-        return res;
-    }
-
-    long cost (int end) {
-        return node[end].distance;
+        return cost;
     }
 }
