@@ -1,15 +1,3 @@
-void main () {
-    import std.stdio;
-    alias ratio = rational!long;
-    ratio sum;
-    for (int i = 20; i <= 25; i++) {
-        sum += ratio(1, i*i);
-    }
-
-    writeln(sum);
-    writeln(sum.toDecimal(100));
-}
-
 /**
 ___
 # 有理数型`rational(T)`
@@ -93,7 +81,7 @@ if (
     }
 
     /** -- opUnary -- **/
-    const auto opUnary (string op : "+") ()
+    auto opUnary (string op : "+") ()
     {
         return this;
     }
@@ -105,7 +93,7 @@ if (
     }
 
     /** -- opBinary -- **/
-    const auto opBinary (string op : "+") (rational!T rhs)
+    auto opBinary (string op : "+") (rational!T rhs)
     {
         /* (a/b) + (c/d) = (ad+bc)/bd */
         /* boost/rationalの計算を参考にした。
@@ -124,13 +112,13 @@ if (
         return res;
     }
 
-    const auto opBinary (string op : "-") (rational!T rhs)
+    auto opBinary (string op : "-") (rational!T rhs)
     {
         /* (a/b) - (c/d) = (a/b) + ((-c)/b) */
         return opBinary!"+"(-rhs);
     }
 
-    const auto opBinary (string op : "*") (rational!T rhs)
+    auto opBinary (string op : "*") (rational!T rhs)
     {
         /* (a/b) * (c/d) = ((a*c)/(b*d)) */
         T num = this.numerator;
@@ -151,8 +139,11 @@ if (
         return res;
     }
 
-    const auto opBinary (string op : "/") (rational!T rhs)
-    {
+    auto opBinary (string op : "/") (rational!T rhs)
+    in {
+        assert(rhs != rational!T(0), "Zero division.");
+    }
+    do {
         /* (a/b) / (c/d) = (a/b) * (d/c) */
         auto res = rational!T(0);
         res.numerator = rhs.denominator, res.denominator = rhs.numerator;
@@ -160,7 +151,7 @@ if (
     }
 
     // いろんな型に対応させる。
-    const auto opBinary (string op, E) (E rhs)
+    auto opBinary (string op, E) (E rhs)
     if ((op == "+" || op == "-" || op == "*" || op == "/") &&
         __traits(compiles, rational!(T)(rhs)))
     {
@@ -169,12 +160,20 @@ if (
     }
 
     /** -- opBinaryRight -- **/
-    const auto opBinaryRight (string op, E) (E rhs)
-    if ((op == "+" || op == "-" || op == "*" || op == "/") &&
-        __traits(compiles, rational!(T)(rhs)))
+    auto opBinaryRight (string op, E) (E lhs)
+    if ((op == "+" || op == "-" || op == "*") &&
+        __traits(compiles, rational!(T)(lhs)))
     {
-        auto ret = rational!(T)(rhs);
+        auto ret = rational!(T)(lhs);
         return opBinary!(op)(ret);
+    }
+
+    auto opBinaryRight (string op, E) (E lhs)
+    if ((op == "/") &&
+        __traits(compiles, rational!(T)(lhs)))
+    {
+        auto ret = rational!(T)(lhs);
+        return opBinary!("*")(rational!T(ret.deno, ret.num));
     }
 
     /** -- opAssign -- **/
@@ -256,18 +255,26 @@ if (
         string res;
         auto num = numerator;
         auto den = denominator;
+        bool minus = false;
+
+        if (num < 0) {
+            num = -num;
+            minus = true;
+        }
+
         foreach (i; 0..digits) {
             res ~= (num/den).to!string;
             if (i == 0) res ~= '.';
             num %= den;
             num *= 10;
         }
+        if (minus) res = "-" ~ res;
         return res;
     }
 
     T rational_gcd (T x, T y) {
         T tmp;
-        while (0 < y) {
+        while (y != 0) {
             tmp = y;
             y = x % y;
             x = tmp;
