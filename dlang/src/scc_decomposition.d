@@ -1,4 +1,4 @@
-int[][] SccDecomposition (int[][] graph, int[][] revgraph)
+int[][] scc_decomposition (int[][] graph, int[][] revgraph)
 in {
     import std.exception : enforce;
     enforce(graph.length == revgraph.length, "graph.length must be equal to revgraph.length");

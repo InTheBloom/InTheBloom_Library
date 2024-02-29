@@ -1,18 +1,13 @@
-/**
- * TODO
- *   - assertで落としたときにstderrにメッセージを表示
- *   - リセット機能をつける
- *
- * VERYFYIED
- *   - uniteとsame : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
- *
- * UNVERYFYIED
- *   - countGroups
- *   - GroupSize
- *   - enumGroups
- */
-
 class UnionFind_Array {
+    /*
+     * VERYFYIED
+     *   - uniteとsame : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
+     *
+     * UNVERYFYIED
+     *   - countGroups
+     *   - GroupSize
+     *   - enumGroups
+     */
     private:
         int N;
         int[] parent;

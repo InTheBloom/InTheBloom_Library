@@ -1,4 +1,4 @@
-bool NextPermutation (alias less = "a<b", T) (T array)
+bool next_permutation (alias less = "a<b", T) (T array)
 if (is (T == E[], E) || is (T == E[n], E, size_t n))
 {
     import std.algorithm : swap, reverse;
@@ -30,7 +30,7 @@ if (is (T == E[], E) || is (T == E[n], E, size_t n))
     return true;
 }
 
-bool PrevPermutation (alias less = "a<b", T) (T array)
+bool prev_permutation (alias less = "a<b", T) (T array)
 if (is (T == E[], E) || is (T == E[n], E, size_t n))
 {
     import std.algorithm : swap, reverse;

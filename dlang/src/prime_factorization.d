@@ -1,10 +1,3 @@
-void main () {
-    import std;
-    long N = uniform(2, 1000000000);
-    auto p = PrimeFactorization(N);
-    writeln(p);
-}
-
 struct PrimeFactorizationResult {
     import std.exception : enforce;
     import std.format : format;

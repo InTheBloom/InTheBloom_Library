@@ -1,6 +1,3 @@
-import std.format : format;
-import std.exception : enforce;
-
 struct SubsetIndexes {
     long bit;
     int right;
@@ -53,6 +50,8 @@ if (is (T == E[], E) || is (T == E[n], E, size_t n))
 
 auto enumSubset (size_t N)
 in {
+    import std.format : format;
+    import std.exception : enforce;
     enforce(0 <= N && N <= 60, format("N must satisfy 0 <= N <= 60. Now N = %s.", N));
 }
 do {
