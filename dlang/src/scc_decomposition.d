@@ -1,7 +1,6 @@
 int[][] scc_decomposition (int[][] graph, int[][] revgraph)
 in {
-    import std.exception : enforce;
-    enforce(graph.length == revgraph.length, "graph.length must be equal to revgraph.length");
+    assert(graph.length == revgraph.length, "graph.length must be equal to revgraph.length");
 }
 do {
     /**
@@ -14,8 +13,9 @@ do {
      * - AIZU ONLINE JUDGE | 強連結成分分解 (https://onlinejudge.u-aizu.ac.jp/problems/GRL_3_C)
      **/
 
-    bool[] vis = new bool[](graph.length);
-    int[] Q; Q.reserve(graph.length);
+    static bool[] vis;
+    static int[] Q;
+
     void dfs (int pos) {
         vis[pos] = true;
         foreach (to; graph[pos]) {
