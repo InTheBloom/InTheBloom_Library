@@ -5,6 +5,7 @@ class LinearSieve {
     /// - void build (ulong N_)
     /// - Tuple!(long, long)[] prime_factors (ulong N_)
     /// - bool is_prime (ulong N_)
+    /// - long[] divisors (ulong N_)
 
     private:
         static int N = 0;
@@ -87,5 +88,40 @@ class LinearSieve {
         do {
             int N = N_.to!int;
             return lpf[N] == N;
+        }
+
+        static long[] divisors (ulong N_)
+        in {
+            assert(N_ <= N, format("Argument N_ = %s is not out of range. The valid range is [2, %s].", N_, N));
+        }
+        do {
+            if (N_ == 1) return [1L];
+
+            import std.container : SList;
+            import std.algorithm : sort;
+
+            auto fac = prime_factors(N_);
+
+            static SList!(Tuple!(int, long)) Q;
+            Q.insertFront(tuple(0, 1L)); // (処理済み階層, 値)
+
+            long[] res;
+            while (!Q.empty) {
+                auto h = Q.front; Q.removeFront;
+                if (h[0] == fac.length) {
+                    res ~= h[1];
+                    continue;
+                }
+
+                auto p = fac[h[0]];
+                long prod = 1;
+                foreach (i; 0..p[1] + 1) {
+                    Q.insertFront(tuple(h[0] + 1, h[1] * prod));
+                    prod *= p[0];
+                }
+            }
+
+            res.sort;
+            return res;
         }
 }
