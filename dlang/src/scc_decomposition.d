@@ -16,6 +16,9 @@ do {
     static bool[] vis;
     static int[] Q;
 
+    vis.length = graph.length;
+    Q.length = 0;
+
     void dfs (int pos) {
         vis[pos] = true;
         foreach (to; graph[pos]) {
