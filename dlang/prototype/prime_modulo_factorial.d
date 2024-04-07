@@ -56,4 +56,15 @@ if ((1 <= M && M < int.max)
             int x = x_.to!int;
             return fact[x];
         }
+
+        long factorial_inv (ulong x)
+        in {
+            assert(x_ <= N,
+                    format("Out of range of pre-calculation. MAX = %s, x = %s.", N, x_)
+                    );
+        }
+        do {
+            int x = x_.to!int;
+            return fact_inv[x];
+        }
 }
