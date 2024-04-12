@@ -57,7 +57,7 @@ if ((1 <= M && M < int.max)
             return fact[x];
         }
 
-        long factorial_inv (ulong x)
+        long factorial_inv (ulong x_)
         in {
             assert(x_ <= N,
                     format("Out of range of pre-calculation. MAX = %s, x = %s.", N, x_)
