@@ -53,7 +53,7 @@ class UnionFind {
 
         void validate_vertex (int u, FUNCTION_ID id) {
             bool res = (0 <= u && u < N);
-#ifdef DEBUG
+#ifndef NDEBUG
             if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(u) << " is out of range." << std::endl;
 #endif
             assert(res);
@@ -61,7 +61,7 @@ class UnionFind {
 
         void validate_element_size (int N, FUNCTION_ID id) {
             bool res = (0 <= N && N < 100'000'000);
-#ifdef DEBUG
+#ifndef NDEBUG
             if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(N) << " is out of range." << std::endl;
 #endif
             assert(res);
