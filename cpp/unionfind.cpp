@@ -26,101 +26,103 @@
 ///   + 頂点数をNで初期化する。構築時は自動初期化されるため、呼ぶ必要はない。
 ///
 /// ## Varification
-/// - UnionFind(yosupo judge): https://judge.yosupo.jp/submission/217649
-/// - Union Find(atcoder): https://atcoder.jp/contests/atc001/submissions/54999089
-/// - Sum of Maximum Weights(atcoder): https://atcoder.jp/contests/abc214/submissions/54999242
+/// - UnionFind(yosupo judge): https://judge.yosupo.jp/submission/217769
+/// - Union Find(atcoder): https://atcoder.jp/contests/atc001/submissions/55002168
+/// - Sum of Maximum Weights(atcoder): https://atcoder.jp/contests/abc214/submissions/55002186
 
 #include <vector>
 #include <string>
 #include <cassert>
 #include <iostream>
 
-class UnionFind {
-    private:
-        std::vector<int> par, siz;
-        int N;
+namespace inthebloom {
+    class UnionFind {
+        private:
+            std::vector<int> par, siz;
+            int N;
 
-        enum class FUNCTION_ID {
-            get_element_size,
-            root,
-            same,
-            unite,
-            size,
-            reset,
-        };
+            enum class FUNCTION_ID {
+                get_element_size,
+                root,
+                same,
+                unite,
+                size,
+                reset,
+            };
 
-        static const std::vector<std::string> function_names;
+            static const std::vector<std::string> function_names;
 
-        void validate_vertex (int u, FUNCTION_ID id) {
-            bool res = (0 <= u && u < N);
+            void validate_vertex (int u, FUNCTION_ID id) {
+                bool res = (0 <= u && u < N);
 #ifndef NDEBUG
-            if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(u) << " is out of range." << std::endl;
+                if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(u) << " is out of range." << std::endl;
 #endif
-            assert(res);
-        }
+                assert(res);
+            }
 
-        void validate_element_size (int N, FUNCTION_ID id) {
-            bool res = (0 <= N && N < 100'000'000);
+            void validate_element_size (int N, FUNCTION_ID id) {
+                bool res = (0 <= N && N < 100'000'000);
 #ifndef NDEBUG
-            if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(N) << " is out of range." << std::endl;
+                if (!res) std::cerr << "UnionFind (" << function_names[static_cast<int> (id)] << "): argument " << std::to_string(N) << " is out of range." << std::endl;
 #endif
-            assert(res);
-        }
+                assert(res);
+            }
 
-    public:
-        UnionFind (int N_) {
-            reset(N_);
-        }
+        public:
+            UnionFind (int N_) {
+                reset(N_);
+            }
 
-        int get_element_size () const {
-            return N;
-        }
+            int get_element_size () const {
+                return N;
+            }
 
-        int root (int u) {
-            validate_vertex(u, FUNCTION_ID::root);
-            if (par[u] == u) return u;
-            return par[u] = root(par[u]);
-        }
+            int root (int u) {
+                validate_vertex(u, FUNCTION_ID::root);
+                if (par[u] == u) return u;
+                return par[u] = root(par[u]);
+            }
 
-        bool same (int u, int v) {
-            validate_vertex(u, FUNCTION_ID::same);
-            validate_vertex(v, FUNCTION_ID::same);
-            return root(u) == root(v);
-        }
+            bool same (int u, int v) {
+                validate_vertex(u, FUNCTION_ID::same);
+                validate_vertex(v, FUNCTION_ID::same);
+                return root(u) == root(v);
+            }
 
-        int unite (int u, int v) {
-            validate_vertex(u, FUNCTION_ID::unite);
-            validate_vertex(v, FUNCTION_ID::unite);
-            // Union-by-size
-            int ru = root(u), rv = root(v);
-            if (ru == rv) return ru;
-            if (siz[ru] < siz[rv]) std::swap(ru, rv);
-            siz[ru] += siz[rv];
-            par[rv] = ru;
-            return ru;
-        }
+            int unite (int u, int v) {
+                validate_vertex(u, FUNCTION_ID::unite);
+                validate_vertex(v, FUNCTION_ID::unite);
+                // Union-by-size
+                int ru = root(u), rv = root(v);
+                if (ru == rv) return ru;
+                if (siz[ru] < siz[rv]) std::swap(ru, rv);
+                siz[ru] += siz[rv];
+                par[rv] = ru;
+                return ru;
+            }
 
-        int size (int u) {
-            validate_vertex(u, FUNCTION_ID::size);
-            return siz[root(u)];
-        }
+            int size (int u) {
+                validate_vertex(u, FUNCTION_ID::size);
+                return siz[root(u)];
+            }
 
-        void reset (int N_) {
-            validate_element_size(N_, FUNCTION_ID::reset);
-            N = N_;
-            par.resize(N);
-            siz.resize(N);
-            for (int i = 0; i < N; i++) par[i] = i;
-            for (int i = 0; i < N; i++) siz[i] = 1;
-        }
-};
+            void reset (int N_) {
+                validate_element_size(N_, FUNCTION_ID::reset);
+                N = N_;
+                par.resize(N);
+                siz.resize(N);
+                for (int i = 0; i < N; i++) par[i] = i;
+                for (int i = 0; i < N; i++) siz[i] = 1;
+            }
+    };
 
-const std::vector<std::string> UnionFind::function_names = {
-    "get_element_size",
-    "root",
-    "same",
-    "unite",
-    "size",
-    "reset",
-};
+    const std::vector<std::string> UnionFind::function_names = {
+        "get_element_size",
+        "root",
+        "same",
+        "unite",
+        "size",
+        "reset",
+    };
+} // namespace inthebloom
 
