@@ -1,7 +1,8 @@
 import std.traits : isIntegral;
+import std.int128 : Int128;
 
 T bsearch (alias func, T) (T ok, T ng)
-if (isIntegral!(T) &&
+if ((isIntegral!(T) || is(T == Int128)) &&
         !is(T == byte) &&
         !is(T == ubyte) &&
         !is(T == short) &&
@@ -20,11 +21,11 @@ if (isIntegral!(T) &&
 
     T delta;
     if (ok < ng) {
-        delta = -1;
+        delta--;
         ng++;
     }
     else {
-        delta = 1;
+        delta++;
         ng--;
     }
 
@@ -42,10 +43,8 @@ if (isIntegral!(T) &&
     return ok;
 }
 
-import std.traits : isIntegral;
-
 T midpoint (T) (T a, T b)
-if (isIntegral!(T))
+if (isIntegral!(T) || is(T == Int128))
 {
     static if (is(T == short) || is(T == ushort) || is(T == byte) || is(T == ubyte)) {
         import std.conv : to;
