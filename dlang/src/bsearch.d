@@ -15,7 +15,7 @@ if ((isIntegral!(T) || is(T == Int128)) &&
     static assert(is(ReturnType!(func) == bool));
     static assert(is(Parameters!(func) == AliasSeq!(T)));
 
-    import std.algorithm.comparison : min;
+    import std.algorithm.comparison : min, max;
 
     if (ok == ng) return ok;
 
@@ -52,7 +52,6 @@ if (isIntegral!(T) || is(T == Int128))
         return midpoint(x, y).to!(T);
     }
     else {
-        import std.math.traits : sgn;
         import std.math.algebraic : abs;
         import std.algorithm.comparison : min, max;
         
