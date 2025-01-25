@@ -1,7 +1,51 @@
 import std.traits : isIntegral;
 import std.int128 : Int128;
 
-T bsearch (alias func, T) (T ok, T ng)
+class NoTrueRangeException: Exception {
+    import std.exception: basicExceptionCtors;
+    mixin basicExceptionCtors;
+}
+
+class BsearchException: Exception {
+    import std.exception: basicExceptionCtors;
+    mixin basicExceptionCtors;
+}
+
+struct BsearchResult (T) {
+    import std.format: format;
+
+    private bool has_value = true;
+    private T l, r;
+    private T _value;
+
+    this (T _l, T _r) {
+        this.l = _l;
+        this.r = _r;
+        this.has_value = false;
+    }
+    this (T _l, T _r, T _value) {
+        this.l = _l;
+        this.r = _r;
+        this._value = _value;
+    }
+
+    @property
+    bool empty () {
+        return !this.has_value;
+    }
+
+    @property
+    T value () {
+        if (this.empty()) {
+            throw new NoTrueRangeException(
+                    format("No true condition found in the range [%s, %s].", l, r));
+        }
+
+        return _value;
+    };
+}
+
+BsearchResult!T bsearch (alias func, T) (T l, T r)
 if ((isIntegral!(T) || is(T == Int128)) &&
         !is(T == byte) &&
         !is(T == ubyte) &&
@@ -16,31 +60,32 @@ if ((isIntegral!(T) || is(T == Int128)) &&
     static assert(is(Parameters!(func) == AliasSeq!(T)));
 
     import std.algorithm.comparison : min, max;
+    T L = l, R = r;
 
-    if (ok == ng) return ok;
-
-    T delta;
-    if (ok < ng) {
-        delta--;
-        ng++;
-    }
-    else {
-        delta++;
-        ng--;
+    if (l == r) {
+        if (func(l)) return BsearchResult!(T)(L, R, l);
+        return BsearchResult!(T)(L, R);
     }
 
-    while (min(ok, ng) + 1 < max(ok, ng)) {
-        T m = midpoint(ok, ng);
+    while (min(l, r) + 1 < max(l, r)) {
+        T m = midpoint(l, r);
 
-        if (func(m + delta)) {
-            ok = m;
+        if (func(m)) {
+            l = m;
         }
         else {
-            ng = m;
+            r = m;
         }
     }
 
-    return ok;
+    bool lb = func(l);
+    if (!lb) return BsearchResult!(T)(L, R);
+
+    bool rb = func(r);
+    if (rb) return BsearchResult!(T)(L, R, r);
+    if (!rb) return BsearchResult!(T)(L, R, l);
+
+    throw new BsearchException(format("This code path should never be reached. l: %s, r: %s.", L, R));
 }
 
 T midpoint (T) (T a, T b)
