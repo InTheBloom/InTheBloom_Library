@@ -18,7 +18,9 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
      * - int count_at_most (int x)
      */
 
+    import std.format: format;
     import core.bitop: bsr, bsf;
+
     private alias Int = ulong;
     private enum bitlength = 64;
     private int depth = 2;
@@ -42,10 +44,11 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
         @property
         int value () {
             if (!this.found()) {
-                throw new Exception("noo");
+                throw new Exception("[エラー] MultiwayTrieSearchResult: 検索結果が存在しないため、アクセスができません。");
             }
             return _value;
         }
+
         @property
         bool found () {
             return _found;
@@ -80,7 +83,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
         // [0, N)を扱う
         // 構築O(N / w)時間、O(N / w)空間
         if (N <= 0) {
-            throw new Exception("this");
+            throw new Exception(format("[エラー] MultiwayTrie.this: 要素数には1以上である必要がありますが、%sが指定されました。", N));
         }
         _N = N;
 
@@ -106,12 +109,13 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
     }
     @property
     bool empty () const {
+        // O(1)時間
         return length() == 0;
     }
     bool find (int x) const {
         // O(1)時間
         if (x < 0 || _N <= x) {
-            throw new Exception("find");
+            throw new Exception(format("[エラー] MultiwayTrie.find: 検索キーは0以上%s未満である必要がありますが、%sが指定されました。", _N, x));
         }
         int cur = parent(x + padding);
         return 0 < (trie[cur] & (1UL << fastmod64(x)));
@@ -119,7 +123,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
     bool insert (int x) {
         // O(logN / logw)時間
         if (x < 0 || _N <= x) {
-            throw new Exception("insert");
+            throw new Exception(format("[エラー] MultiwayTrie.insert: 検索キーは0以上%s未満である必要がありますが、%sが指定されました。", _N, x));
         }
         if (find(x)) {
             return false;
@@ -139,7 +143,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
     bool remove (int x) {
         // O(logN / logw)時間
         if (x < 0 || _N <= x) {
-            throw new Exception("remove");
+            throw new Exception(format("[エラー] MultiwayTrie.remove: 検索キーは0以上%s未満である必要がありますが、%sが指定されました。", _N, x));
         }
         if (!find(x)) {
             return false;
@@ -167,7 +171,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
     auto successor (int x) const {
         // O(logN / logw)時間
         if (x < 0 || _N <= x) {
-            throw new Exception("successor");
+            throw new Exception(format("[エラー] MultiwayTrie.successor: 検索キーは0以上%s未満である必要がありますが、%sが指定されました。", _N, x));
         }
         if (find(x)) {
             return MultiwayTrieSearchResult(x);
@@ -193,7 +197,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
     auto predecessor (int x) const {
         // O(logN / logw)時間
         if (x < 0 || _N <= x) {
-            throw new Exception("predecessor");
+            throw new Exception(format("[エラー] MultiwayTrie.predecessor: 検索キーは0以上%s未満である必要がありますが、%sが指定されました。", _N, x));
         }
         if (find(x)) {
             return MultiwayTrieSearchResult(x);
@@ -229,7 +233,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
             // kは1-indexed
             // O(logN)時間
             if (k <= 0) {
-                throw new Exception("kth_element");
+                throw new Exception(format("[エラー] MultiwayTrie.kth_element: kは1以上である必要がありますが、%sが指定されました。", k));
             }
             if (length() < k) {
                 return MultiwayTrieSearchResult();
@@ -254,7 +258,7 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
                     return MultiwayTrieSearchResult(kth_child(cur, i) - padding);
                 }
             }
-            assert(false, format("supposed to be unreachable."));
+            assert(false, "supposed to be unreachable.");
         }
         int count_at_most (int x) const {
             // O(logN)時間
@@ -304,4 +308,21 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
 }
 
 alias MultiwayTrieWithCounter = MultiwayTrie!(true);
-alias MultiwayTrieWithoutCounter = MultiwayTrie!(true);
+alias MultiwayTrieWithoutCounter = MultiwayTrie!(false);
+
+unittest {
+    // 各メソッドを異常な引数で呼んだ時に投げられる例外メッセージのチェック
+
+    import std;
+    try { auto set = new MultiwayTrieWithCounter(-1); } catch (Throwable e) { writeln(e.msg); }
+
+    auto set = new MultiwayTrieWithCounter(10);
+
+    try { set.find(-1); } catch (Throwable e) { writeln(e.msg); }
+    try { set.insert(-1); } catch (Throwable e) { writeln(e.msg); }
+    try { set.remove(-1); } catch (Throwable e) { writeln(e.msg); }
+    try { set.successor(-1); } catch (Throwable e) { writeln(e.msg); }
+    try { set.predecessor(-1); } catch (Throwable e) { writeln(e.msg); }
+    try { set.kth_element(0); } catch (Throwable e) { writeln(e.msg); }
+}
+
