@@ -29,12 +29,10 @@ struct BsearchResult (T) {
         this._value = _value;
     }
 
-    @property
     bool empty () {
         return !this.has_value;
     }
 
-    @property
     T value () {
         if (this.empty()) {
             throw new NoTrueRangeException(

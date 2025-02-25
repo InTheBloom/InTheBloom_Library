@@ -41,7 +41,6 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
             this._value = _value;
         }
 
-        @property
         int value () {
             if (!this.found()) {
                 throw new Exception("[エラー] MultiwayTrieSearchResult: 検索結果が存在しないため、アクセスができません。");
@@ -49,7 +48,6 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
             return _value;
         }
 
-        @property
         bool found () {
             return _found;
         }
@@ -102,12 +100,10 @@ class MultiwayTrie (bool ENABLE_SUBTREE_COUNT = false) {
         }
     }
 
-    @property
     int length () const {
         // O(1)時間
         return _size;
     }
-    @property
     bool empty () const {
         // O(1)時間
         return length() == 0;
