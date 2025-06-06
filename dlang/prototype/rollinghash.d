@@ -9,23 +9,17 @@ template RollingHash () {
     }
 
     struct Hash {
-        long value;
-        long rPow;
+        long value = 0;
+        long rPow = 1;
 
         this (long _value) {
-            enforce(0 <= _value);
+            enforce(0 <= _value && _value < modulo);
             value = _value;
             rPow = r;
         }
-
-        static Hash monoid () {
-            auto ret = Hash(0);
-            ret.rPow = 0;
-            return ret;
-        }
     }
 
-    long modMul (long a, long b) {
+    long modMul (const long a, const long b) {
         enforce(0 <= a && a < modulo);
         enforce(0 <= b && b < modulo);
         enum MASK31 = (1 << 31) - 1;
@@ -63,8 +57,8 @@ template RollingHash () {
         return ret;
     }
 
-    Hash concat (const ref Hash lh, const ref Hash rh) {
-        Hash ret = Hash.monoid();
+    Hash concat (const Hash lh, const Hash rh) {
+        Hash ret = Hash();
         ret.value = rh.value;
         ret.value += modMul(lh.value, rh.rPow);
         if (modulo <= ret.value) {
@@ -73,6 +67,70 @@ template RollingHash () {
         ret.rPow = modMul(lh.rPow, rh.rPow);
         return ret;
     }
+
+    import std.traits: isImplicitlyConvertible, ForeachType;
+    struct HashedSequence {
+        Hash[] acc;
+
+        this (T) (const T seq)
+        if (__traits(compiles, (T t) => t[0]) &&
+            __traits(compiles, (T t) => t.length) &&
+            isImplicitlyConvertible!(ForeachType!(T), long)) {
+            import std.algorithm;
+            // 全てが範囲内かチェック。
+            enforce(seq.map!((x) => 0 <= x && x < modulo).fold!((x, y) => x && y)(true));
+
+            acc = new Hash[](seq.length + 1);
+            foreach (i; 0 .. seq.length) {
+                acc[i + 1] = concat(acc[i], Hash(seq[i]));
+            }
+        }
+
+        // 右半開区間連続部分列[i, j)のハッシュを計算。
+        Hash get (const size_t i, const size_t j) {
+            enforce(0 <= i && i < acc.length);
+            enforce(0 <= j && j < acc.length);
+            enforce(i <= j);
+
+            const size_t length = j - i;
+            auto ret = acc[j];
+            ret.value -= modMul(acc[length].rPow, acc[i].value);
+            if (ret.value < 0) {
+                ret.value += modulo;
+            }
+            ret.rPow = acc[length].rPow;
+
+            return ret;
+        }
+    }
+}
+
+unittest {
+    import std.stdio;
+    import std.exception;
+
+    writeln("[INFO] test of RollingHash!().Hash");
+    alias rh = RollingHash!();
+
+    // 引数なしで単位元になるか
+    {
+        auto h = rh.Hash();
+        assert(h.value == 0);
+        assert(h.rPow == 1);
+    }
+
+    // 範囲外の値に対するハッシュの構築
+    assertThrown(rh.Hash(-1));
+    assertThrown(rh.Hash(rh.modulo));
+
+    // 単一引数のときの挙動
+    {
+        auto h = rh.Hash(100);
+        assert(h.value == 100);
+        assert(h.rPow == rh.r);
+    }
+
+    writeln("[INFO] passed!");
 }
 
 unittest {
@@ -83,20 +141,82 @@ unittest {
 
     writeln("[INFO] test of RollingHash!().modMul()");
     alias rh = RollingHash!();
-    const long MOD = (1L << 61) - 1;
+    assert(rh.modulo == (1L << 61) - 1);
 
     foreach (t; 0 .. 100) {
-        long x = uniform!"[]"(0, MOD - 1);
-        long y = uniform!"[]"(0, MOD - 1);
+        long x = uniform!"[]"(0, rh.modulo - 1);
+        long y = uniform!"[]"(0, rh.modulo - 1);
 
         long vl = rh.modMul(x, y);
         long vr = rh.modMul(y, x);
 
         BigInt correct = x;
         correct *= y;
-        correct %= MOD;
+        correct %= rh.modulo;
 
         assert(vl == vr && vl == correct, format("vl: %s, vr: %s, correct: %s", vl, vr, correct));
     }
     writeln("[INFO] passed!");
+}
+
+unittest {
+    import std.stdio;
+    import std.exception;
+
+    writeln("[INFO] test of RollingHash!().HashedSequece");
+    alias rh = RollingHash!();
+
+    // 構築
+    assertNotThrown(rh.HashedSequence([0, 0, 1, rh.modulo - 1]));
+    assertThrown(rh.HashedSequence([0, 0, -1, 2]));
+    assertThrown(rh.HashedSequence([0, 0, rh.modulo, 2]));
+
+    // 取得クエリ
+    {
+        auto h = rh.HashedSequence("hogehoge");
+        assertNotThrown(h.get(1, 1));
+        assertThrown(h.get(1, 0));
+
+        assertNotThrown(h.get(0, 5));
+        assertThrown(h.get(-1, 5));
+
+        assertNotThrown(h.get(3, 8));
+        assertThrown(h.get(3, 9));
+
+    }
+
+    // 文字列
+    {
+        auto h1 = rh.HashedSequence("Hello World!");
+        auto h2 = rh.HashedSequence("hello world!");
+
+        // "Hello World!" != "hello world!"
+        assert(h1.get(0, 12) != h2.get(0, 12));
+
+        // "" == ""
+        assert(h1.get(0, 0) == h2.get(0, 0));
+
+        // ell == ell
+        assert(h1.get(1, 3) == h2.get(1, 3));
+
+        // " Wor" != " wor"
+        assert(h1.get(5, 9) != h2.get(5, 9));
+    }
+
+    // 数列
+    {
+        auto h1 = rh.HashedSequence([3, 1, 4, 1, 5, 42]);
+        auto h2 = rh.HashedSequence([42, 4, 1, 5, 10]);
+
+        // [42] == [42]
+        assert(h1.get(5, 6) == h2.get(0, 1));
+
+        // [4, 1, 5] == [4, 1, 5]
+        assert(h1.get(2, 5) == h2.get(1, 4));
+
+        // [5, 42] != [42, 4]
+        assert(h1.get(4, 6) != h2.get(0, 2));
+    }
+
+    writeln("passed!");
 }
