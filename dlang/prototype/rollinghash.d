@@ -39,7 +39,6 @@ template RollingHash () {
         long m = au * bl + al * bu;
 
         ret += m >> 30;
-        import std.stdio;
         ret += (m & MASK30) << 31;
 
         ret += al * bl;
