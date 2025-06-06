@@ -88,8 +88,8 @@ template RollingHash () {
 
         // 右半開区間連続部分列[i, j)のハッシュを計算。
         Hash get (const size_t i, const size_t j) {
-            enforce(0 <= i && i < acc.length);
-            enforce(0 <= j && j < acc.length);
+            enforce(0 <= i && i < acc.length - 1);
+            enforce(0 <= j && j <= acc.length - 1);
             enforce(i <= j);
 
             const size_t length = j - i;
@@ -177,12 +177,17 @@ unittest {
         assertNotThrown(h.get(1, 1));
         assertThrown(h.get(1, 0));
 
+        // i側
         assertNotThrown(h.get(0, 5));
         assertThrown(h.get(-1, 5));
+        assertNotThrown(h.get(7, 7));
+        assertThrown(h.get(8, 8));
 
+        // j側
         assertNotThrown(h.get(3, 8));
         assertThrown(h.get(3, 9));
-
+        assertNotThrown(h.get(0, 0));
+        assertThrown(h.get(0, -1));
     }
 
     // 文字列
@@ -218,5 +223,5 @@ unittest {
         assert(h1.get(4, 6) != h2.get(0, 2));
     }
 
-    writeln("passed!");
+    writeln("[INFO] passed!");
 }
