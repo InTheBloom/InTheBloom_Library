@@ -18,7 +18,7 @@ template RollingHash () {
             rPow = r;
         }
 
-        static monoid () {
+        static Hash monoid () {
             auto ret = Hash(0);
             ret.rPow = 0;
             return ret;
@@ -26,7 +26,8 @@ template RollingHash () {
     }
 
     long modMul (long a, long b) {
-        enforce(0 <= a && 0 <= b);
+        enforce(0 <= a && a < modulo);
+        enforce(0 <= b && b < modulo);
         enum MASK31 = (1 << 31) - 1;
         long au = a >> 31;
         long al = a & MASK31;
@@ -64,15 +65,23 @@ template RollingHash () {
 
     Hash concat (const ref Hash lh, const ref Hash rh) {
         Hash ret = Hash.monoid();
-        ret.value = 0;
+        ret.value = rh.value;
+        ret.value += modMul(lh.value, rh.rPow);
+        if (modulo <= ret.value) {
+            ret.value -= modulo;
+        }
+        ret.rPow = modMul(lh.rPow, rh.rPow);
         return ret;
     }
 }
 
 unittest {
+    import std.stdio;
     import std.bigint;
     import std.random;
     import std.format;
+
+    writeln("[INFO] test of RollingHash!().modMul()");
     alias rh = RollingHash!();
     const long MOD = (1L << 61) - 1;
 
@@ -89,4 +98,5 @@ unittest {
 
         assert(vl == vr && vl == correct, format("vl: %s, vr: %s, correct: %s", vl, vr, correct));
     }
+    writeln("[INFO] passed!");
 }
