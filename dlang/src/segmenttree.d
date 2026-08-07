@@ -1,139 +1,270 @@
-import std.traits : ReturnType, isCallable, Parameters;
-import std.meta : AliasSeq;
+/// segment tree
 
-class SegmentTree (T, alias ope, alias e)
-if (
-           isCallable!(ope)
-        && isCallable!(e)
-        && is (ReturnType!(ope) == T)
-        && is (ReturnType!(e) == T)
-        && is (Parameters!(ope) == AliasSeq!(T, T))
-        && is (Parameters!(e) == AliasSeq!())
-        )
-{
-    /* 内部の配列が1-indexedで2冪のセグメントツリー */
-    import std.format : format;
-    T[] X;
+/// example:
+
+/// auto seg = new SegmentTree!(int, (a, b) => a + b, () => 0)(N);
+
+/// seg.set(i, x);
+/// seg.update(i, x);
+/// seg.get(i);
+/// seg.prod(l, r);
+/// seg.allProd();
+
+/// seg.layers(); -> [0]が葉
+
+/// seg.minLeft(i, (v) => v < 10); -> nullはseg[i]で条件を満たさない
+/// seg.maxRight(i, (v) => v < 10); -> nullはseg[i]で条件を満たさない
+
+class SegmentTree (T, alias op, alias e) {
+    import std.format;
+    import std.traits;
+    import std.exception;
+    import std.range;
+
+    static assert(is(Unqual!(T) == T),
+            "[ERROR] SegmentTree: T must be an unqualified type.");
+    static assert(__traits(compiles, op(T.init, T.init)),
+            format("[ERROR] SegmentTree: op(%s, %s) must be callable.", T.stringof, T.stringof));
+    static assert(is(typeof(op(T.init, T.init)) == T),
+            format("[ERROR] SegmentTree: op(%s, %s) must return %s, but it returns %s.",
+                T.stringof, T.stringof, T.stringof, typeof(op(T.init, T.init)).stringof));
+    static assert(__traits(compiles, e()),
+            "[ERROR] SegmentTree: e() must be callable.");
+    static assert(is(typeof(e()) == T),
+            format("[ERROR] SegmentTree: e() must return %s, but it returns %s.", T.stringof, typeof(e()).stringof));
+
+
     size_t length;
+    int leafs;
+    T[] node;
 
-    /* --- Constructors --- */
-    this (size_t length_) {
-        adjust_array_length(length_);
-        for (size_t i = length; i < 2*length; i++) {
-            X[i] = e();
+    this (size_t N) {
+        struct ERange {
+            size_t rem;
+            size_t length () {
+                return rem;
+            }
+            bool empty () {
+                return rem == 0;
+            }
+            T front () {
+                return e();
+            }
+            void popFront () {
+                rem--;
+            }
         }
-        build();
+
+        this(ERange(N));
     }
 
-    import std.range.primitives : isInputRange;
-    this (R) (R Range)
-    if (isInputRange!(R) && is (ElementType!(R) == T))
+    this (R) (R range)
+    if (isInputRange!(R) && isImplicitlyConvertible!(ForeachType!(R), T) && hasLength!(R))
     {
-        adjust_array_length(walkLength(Range));
-        size_t i = length;
-        foreach (item; Range) {
-            X[i] = item;
-            i++;
+        length = range.length;
+        enforce(1 <= length,
+                "[ERROR] SegmentTree: length must be positive.");
+
+        leafs = 1;
+        while (leafs < length) {
+            leafs *= 2;
         }
-        while (i < 2*length) { X[i] = e(); i++; }
-        build();
+
+        // 全体で2 * leafs - 1ノード必要
+        // 1-indexedで使う
+        node.length = 2 * leafs;
+
+        foreach (i; 0 .. leafs) {
+            T v = e();
+            if (!range.empty()) {
+                v = range.front();
+                range.popFront();
+            }
+            node[i + leafs] = v;
+        }
+
+        foreach_reverse (i; 1 .. leafs) {
+            node[i] = op(node[2 * i], node[2 * i + 1]);
+        }
     }
 
-    /* --- Functions --- */
-    private 
-        void adjust_array_length (size_t length_) {
-            length = 1;
-            while (length <= length_) length *= 2;
-            X = new T[](2*length);
+    void set (size_t i, T v) {
+        enforce(i < length,
+                format("[ERROR] SegmentTree.set: index %s is out of range [0, %s).",
+                    i, length));
+
+        size_t cur = i + leafs;
+        node[cur] = v;
+        cur /= 2;
+        while (1 <= cur) {
+            node[cur] = op(node[2 * cur], node[2 * cur + 1]);
+            cur /= 2;
+        }
+    }
+
+    void update (size_t i, T v) {
+        enforce(i < length,
+                format("[ERROR] SegmentTree.update: index %s is out of range [0, %s).",
+                    i, length));
+        size_t cur = i + leafs;
+        node[cur] = op(node[cur], v);
+        cur /= 2;
+        while (1 <= cur) {
+            node[cur] = op(node[2 * cur], node[2 * cur + 1]);
+            cur /= 2;
+        }
+    }
+
+    T get (size_t i) {
+        enforce(i < length,
+                format("[ERROR] SegmentTree.get: index %s is out of range [0, %s).",
+                i, length));
+        return node[i + leafs];
+    }
+
+    T prod (size_t l, size_t r) {
+        enforce(l <= r,
+            format("[ERROR] SegmentTree.prod: invalid range [%s, %s): l must be <= r.",
+                   l, r));
+        enforce(r <= length,
+            format("[ERROR] SegmentTree.prod: range [%s, %s) is out of range [0, %s).",
+                   l, r, length));
+
+        if (l == r) {
+            return e();
+        }
+        if (l == 0 && r == length) {
+            return node[1];
         }
 
-        void set_with_no_update (size_t idx, T val)
-        in {
-            assert(idx < length,
-                    format("In function \"set_with_no_update\", idx is out of range. (length = %s idx = %s)", length, idx));
-        }
-        do {
-            X[length+idx] = val;
+        l = l + leafs;
+        r = r - 1 + leafs;
+
+        T lp = e(), rp = e();
+        while (l <= r) {
+            if (l % 2 == 1) {
+                lp = op(lp, node[l]);
+                l++;
+            }
+            if (r % 2 == 0) {
+                rp = op(node[r], rp);
+                r--;
+            }
+
+            l /= 2;
+            r /= 2;
         }
 
-        void build () {
-            for (size_t i = length-1; 1 <= i; i--) {
-                X[i] = ope(X[2*i], X[2*i+1]);
+        return op(lp, rp);
+    }
+
+    T allProd () {
+        return node[1];
+    }
+
+    T[][] layers () {
+        auto ret = new T[][](0);
+        int w = 1;
+        int cur = 1;
+        while (true) {
+            if (node.length < cur + w) {
+                break;
+            }
+            ret ~= node[cur .. cur + w];
+            cur += w;
+            w *= 2;
+        }
+
+        import std.algorithm;
+        ret.reverse;
+        return ret;
+    }
+
+    import std.typecons;
+
+    Nullable!(int) maxRight (size_t l, bool delegate (T) f) {
+        enforce(l < length,
+            format("[ERROR] SegmentTree.maxRight: index %s is out of range [0, %s).",
+                   l, length));
+
+        Nullable!int ret;
+        if (!f(get(l))) {
+            return ret;
+        }
+
+        if (f(prod(l, length))) {
+            ret = cast(int)(length - 1);
+            return ret;
+        }
+
+        size_t cur = l + leafs;
+        T val = e();
+        while (true) {
+            if (cur % 2 == 1) {
+                val = op(val, node[cur]);
+                cur++;
+            }
+            cur /= 2;
+
+            if (!f(op(val, node[cur]))) {
+                break;
             }
         }
 
-    public
-        override string toString () {
-            string res = "";
-            int level = 1;
-            while ((2^^(level-1)) < X.length) {
-                res ~= format("level: %2s | ", level);
-                for (size_t i = (2^^(level-1)); i < (2^^level); i++) {
-                    res ~= format("%s%s", X[i], (i == (2^^level)-1 ? "\n" : " "));
-                }
-                level++;
+        while (cur < leafs) {
+            if (!f(op(val, node[2 * cur]))) {
+                cur = 2 * cur;
             }
-            return res;
-        }
-
-        void set (size_t idx, T val)
-        in {
-            assert(idx < length,
-                    format("In function \"set\", idx is out of range. (length = %s idx = %s)", length, idx));
-        }
-        do {
-            idx += length;
-            X[idx] = val;
-            while (2 <= idx) {
-                idx /= 2;
-                X[idx] = ope(X[2*idx], X[2*idx+1]);
+            else {
+                val = op(val, node[2 * cur]);
+                cur = 2 * cur + 1;
             }
         }
 
-        T get (size_t idx)
-        in {
-            assert(idx < length,
-                    format("In function \"get\", idx is out of range. (length = %s idx = %s)", length, idx));
+        ret = cast(int)(cur - leafs - 1);
+        return ret;
+    }
+
+    Nullable!(int) minLeft (size_t r, bool delegate (T) f) {
+        enforce(r < length,
+            format("[ERROR] SegmentTree.minLeft: index %s is out of range [0, %s).",
+                   r, length));
+
+        Nullable!int ret;
+        if (!f(get(r))) {
+            return ret;
         }
-        do {
-            idx += length;
-            return X[idx];
+
+        if (f(prod(0, r + 1))) {
+            ret = 0;
+            return ret;
         }
 
-        T prod (size_t l, size_t r)
-        in {
-            assert(l < length,
-                    format("In function \"prod\", l is out of range. (length = %s l = %s)", length, l));
-            assert(r <= length,
-                    format("In function \"prod\", r is out of range. (length = %s r = %s)", length, r));
-            assert(l <= r,
-                    format("In function \"prod\", l < r must be satisfied. (length = %s l = %s, r = %s)", length, l, r));
-        }
-        do {
-            /* Returns all prod O(1) */
-            if (l == 0 && r == length) return X[1];
-            if (l == r) return e();
-
-            /* Closed interval [l, r] */
-            r--;
-            l += length, r += length;
-            T LeftProd, RightProd;
-            LeftProd = RightProd = e();
-
-            while (l <= r) {
-                if (l % 2 == 1) {
-                    LeftProd = ope(LeftProd, X[l]);
-                    l++;
-                }
-                if (r % 2 == 0) {
-                    RightProd = ope(X[r], RightProd);
-                    r--;
-                }
-
-                l /= 2;
-                r /= 2;
+        size_t cur = r + leafs;
+        T val = e();
+        while (true) {
+            if (cur % 2 == 0) {
+                val = op(node[cur], val);
+                cur--;
             }
+            cur /= 2;
 
-            return ope(LeftProd, RightProd);
+            if (!f(op(node[cur], val))) {
+                break;
+            }
         }
+
+        while (cur < leafs) {
+            if (!f(op(node[2 * cur + 1], val))) {
+                cur = 2 * cur + 1;
+            }
+            else {
+                val = op(node[2 * cur + 1], val);
+                cur = 2 * cur;
+            }
+        }
+
+        ret = cast(int)(cur - leafs + 1);
+        return ret;
+    }
 }

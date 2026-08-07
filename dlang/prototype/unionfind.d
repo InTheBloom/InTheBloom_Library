@@ -1,121 +1,137 @@
-class UnionFind_Array {
-    /*
-     * VERYFYIED
-     *   - uniteとsame : yosupo judge (https://judge.yosupo.jp/problem/unionfind)
-     *
-     * UNVERYFYIED
-     *   - countGroups
-     *   - GroupSize
-     *   - enumGroups
-     */
-    private:
-        int N;
-        int[] parent;
-        int[] size;
+class UnionFind {
+    import std.exception;
+    import std.algorithm;
 
-    this (int N)
-    in {
-        assert(0 <= N, "N must be positive integer.");
-    }
-    do {
+    int N;
+    int[] par;
+    int[] sz;
+    int gps;
+
+    this (int N) {
+        enforce(0 <= N, "N must be positive integer.");
         this.N = N;
-        parent = new int[](N);
-        size = new int[](N);
+        par = new int[](N);
+        sz = new int[](N);
+        gps = N;
         foreach (i; 0..N) {
-            parent[i] = i;
-            size[i] = 1;
+            par[i] = i;
+            sz[i] = 1;
         }
     }
 
-    int root (int x) 
-    in {
-        assert(0 <= x && x < N);
-    }
-    do {
-        if (parent[x] == x) return x;
-        return parent[x] = root(parent[x]);
+    int root (int x) {
+        enforce(0 <= x && x < N);
+        if (par[x] == x) return x;
+        return par[x] = root(par[x]);
     }
 
-    bool same (int x, int y)
-    in {
-        assert(0 <= x && x < N);
-        assert(0 <= y && y < N);
-    }
-    do {
+    bool same (int x, int y) {
+        enforce(0 <= x && x < N);
+        enforce(0 <= y && y < N);
         return root(x) == root(y);
     }
 
-    void unite (int x, int y)
-    in {
-        assert(0 <= x && x < N);
-        assert(0 <= y && y < N);
-    }
-    do {
-        int larger, smaller;
-        if (GroupSize(x) <= GroupSize(y)) {
-            larger = root(y);
-            smaller = root(x);
-        } else {
-            larger = root(x);
-            smaller = root(y);
+    void unite (int x, int y) {
+        enforce(0 <= x && x < N);
+        enforce(0 <= y && y < N);
+
+        x = root(x);
+        y = root(y);
+
+        if (x == y) {
+            return;
         }
 
-        if (larger == smaller) return;
-
-        parent[smaller] = larger;
-        size[larger] += size[smaller];
-    }
-
-    int countGroups () {
-        int res = 0;
-        foreach (i; 0..N) if (root(i) == i) res++;
-        return res;
-    }
-
-    int GroupSize (int x)
-    in {
-        assert(0 <= x && x < N);
-    }
-    do {
-        return size[root(x)];
-    }
-
-    int[][] enumGroups (int x)
-    in {
-        assert(0 <= x && x < N);
-    }
-    do {
-        int[][] mp = new int[][](N, 0);
-        foreach (i; 0..N) {
-            mp[root(i)] ~= i;
+        if (sz[y] < sz[x]) {
+            swap(x, y);
         }
 
-        int[][] res;
-        foreach (m; mp) {
-            if (m.length == 0) continue;
-            res ~= m;
-        }
-
-        return res;
+        gps--;
+        par[x] = y;
+        sz[y] += sz[x];
     }
 
-    void reset (int N = this.N)
-    in {
-        assert(0 <= N, "N must be positive integer.");
+    int groups () {
+        return gps;
     }
-    do {
-        if (N != this.N) {
-            this.N = N;
-            parent.length = size.length = N;
-        }
 
-        foreach (i; 0..N) {
-            parent[i] = i;
-            size[i] = 1;
-        }
+    size_t size (int x) {
+        enforce(0 <= x && x < N);
+        return sz[root(x)];
     }
 }
 
-auto UnionFind (int N) {
-    return new UnionFind_Array(N);
+unittest {
+    // 生成AIが書いた謎unit test
+    // とりあえず通るからええやろ
+
+    import std.random;
+    import std.algorithm;
+    import std.array;
+    import std.format;
+
+    enum TEST_CASES = 10;
+    enum MAX_N = 500;
+    enum MAX_Q = 50;
+
+    auto rnd = Random(unpredictableSeed);
+
+    foreach (tc; 0 .. TEST_CASES) {
+        int N = uniform(1, MAX_N + 1, rnd);
+        auto uf = new UnionFind(N);
+
+        auto G = new int[][](N);
+
+        foreach (_; 0 .. MAX_Q) {
+            int u = uniform(0, N, rnd);
+            int v = uniform(0, N, rnd);
+
+            uf.unite(u, v);
+
+            G[u] ~= v;
+            G[v] ~= u;
+
+            auto visited = new bool[](N);
+            int groupCount = 0;
+
+            foreach (s; 0 .. N) {
+                if (visited[s]) continue;
+
+                groupCount++;
+
+                int[] stack = [s];
+                visited[s] = true;
+
+                int cnt = 0;
+                while (!stack.empty) {
+                    int x = stack.back;
+                    stack.popBack;
+                    cnt++;
+
+                    foreach (to; G[x]) {
+                        if (visited[to]) continue;
+                        visited[to] = true;
+                        stack ~= to;
+                    }
+                }
+
+                // この成分に属する全頂点の size を確認
+                foreach (x; 0 .. N) {
+                    if (uf.same(s, x)) {
+                        assert(
+                            uf.size(x) == cnt,
+                            "size mismatch: tc=%s, N=%s, x=%s, expected=%s, actual=%s"
+                                .format(tc, N, x, cnt, uf.size(x))
+                        );
+                    }
+                }
+            }
+
+            assert(
+                uf.groups() == groupCount,
+                "groups mismatch: tc=%s, N=%s, expected=%s, actual=%s"
+                    .format(tc, N, groupCount, uf.groups())
+            );
+        }
+    }
 }

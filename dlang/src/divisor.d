@@ -1,7 +1,7 @@
 long[] divisors (ulong N)
 in {
     import std.format : format;
-    assert(2 <= N && N <= 10L^^16, format("The argument %s is out of the allowable range. The valid range is [2, 10^16].", N));
+    assert(1 <= N && N <= 10L^^16, format("The argument %s is out of the allowable range. The valid range is [2, 10^16].", N));
 }
 do {
     import std.algorithm : sort;
@@ -21,7 +21,7 @@ do {
 long[][] range_divisors (ulong N)
 in {
     import std.format : format;
-    assert(2 <= N && N <= 10^^7, format("The argument %s is out of the allowable range. The valid range is [2, 10^7].", N));
+    assert(1 <= N && N <= 10^^7, format("The argument %s is out of the allowable range. The valid range is [2, 10^7].", N));
 }
 do {
     long[][] res = new long[][](cast(int) (N + 1), 0);

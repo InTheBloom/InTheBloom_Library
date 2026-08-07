@@ -1,8 +1,7 @@
-int[][] scc_decomposition (int[][] graph, int[][] revgraph)
-in {
-    assert(graph.length == revgraph.length, "graph.length must be equal to revgraph.length");
-}
-do {
+int[][] sccDecomposition (int[][] graph, int[][] revgraph) {
+    import std.exception;
+    enforce(graph.length == revgraph.length, "graph.length must be equal to revgraph.length");
+
     /**
      * assume:
      * 1. vertex is 0-indexed and maximum vertex number is less than graph.length
@@ -13,8 +12,8 @@ do {
      * - AIZU ONLINE JUDGE | 強連結成分分解 (https://onlinejudge.u-aizu.ac.jp/problems/GRL_3_C)
      **/
 
-    static bool[] vis;
-    static int[] Q;
+    bool[] vis;
+    int[] Q;
 
     vis.length = graph.length;
     Q.length = 0;

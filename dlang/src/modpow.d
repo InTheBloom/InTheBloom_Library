@@ -1,10 +1,9 @@
-long mod_pow (long a, long x, const long MOD)
-in {
-    assert(0 <= x, "x must satisfy 0 <= x");
-    assert(1 <= MOD, "MOD must satisfy 1 <= MOD");
-    assert(MOD <= int.max, "MOD must satisfy MOD*MOD <= long.max");
-}
-do {
+long modPow (long a, long x, const long MOD) {
+    import std.exception;
+    enforce(0 <= x, "x must satisfy 0 <= x");
+    enforce(1 <= MOD, "MOD must satisfy 1 <= MOD");
+    enforce(MOD <= int.max, "MOD must satisfy MOD*MOD <= long.max");
+
     // normalize
     a %= MOD; a += MOD; a %= MOD;
 
@@ -17,4 +16,12 @@ do {
     }
 
     return res % MOD;
+}
+
+long modInv (const long x, const long MOD)
+    import std.exception;
+    import std.format : format;
+    enforce(1 <= MOD, format("MOD must satisfy 1 <= MOD. Now MOD =  %s.", MOD));
+    enforce(MOD <= int.max, format("MOD must satisfy MOD*MOD <= long.max. Now MOD = %s.", MOD));
+    return mod_pow(x, MOD-2, MOD);
 }

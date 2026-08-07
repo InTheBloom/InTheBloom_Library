@@ -1,4 +1,4 @@
-template RollingHash () {
+template RollingHash (bool keepRawSequence = false) {
     import std.exception;
     immutable long modulo = (1L << 61) - 1;
     const long r;
@@ -12,10 +12,18 @@ template RollingHash () {
         long value = 0;
         long rPow = 1;
 
+        static if (keepRawSequence) {
+            long[] raws = [];
+        }
+
         this (long _value) {
             enforce(0 <= _value && _value < modulo);
             value = _value;
             rPow = r;
+
+            static if (keepRawSequence) {
+                raws = [value];
+            }
         }
     }
 
@@ -64,12 +72,21 @@ template RollingHash () {
             ret.value -= modulo;
         }
         ret.rPow = modMul(lh.rPow, rh.rPow);
+
+        static if (keepRawSequence) {
+            ret.raws = lh.raws.dup ~ rh.raws.dup;
+        }
         return ret;
     }
 
     import std.traits: isImplicitlyConvertible, ForeachType;
     struct HashedSequence {
         Hash[] acc;
+        size_t length;
+
+        static if (keepRawSequence) {
+            long[] rawseq;
+        }
 
         this (T) (const T seq)
         if (__traits(compiles, (T t) => t[0]) &&
@@ -79,6 +96,14 @@ template RollingHash () {
             // 全てが範囲内かチェック。
             enforce(seq.map!((x) => 0 <= x && x < modulo).fold!((x, y) => x && y)(true));
 
+            static if (keepRawSequence) {
+                rawseq = new long[](seq.length);
+                foreach (i; 0 .. seq.length) {
+                    rawseq[i] = seq[i];
+                }
+            }
+
+            length = seq.length;
             acc = new Hash[](seq.length + 1);
             foreach (i; 0 .. seq.length) {
                 acc[i + 1] = concat(acc[i], Hash(seq[i]));
@@ -87,17 +112,74 @@ template RollingHash () {
 
         // 右半開区間連続部分列[i, j)のハッシュを計算。
         Hash get (const size_t i, const size_t j) {
-            enforce(0 <= i && i < acc.length - 1);
-            enforce(0 <= j && j <= acc.length - 1);
             enforce(i <= j);
+            enforce(j <= length);
 
-            const size_t length = j - i;
+            const size_t L = j - i;
             auto ret = acc[j];
-            ret.value -= modMul(acc[length].rPow, acc[i].value);
+            ret.value -= modMul(acc[L].rPow, acc[i].value);
             if (ret.value < 0) {
                 ret.value += modulo;
             }
-            ret.rPow = acc[length].rPow;
+            ret.rPow = acc[L].rPow;
+
+            static if (keepRawSequence) {
+                ret.raws = rawseq[i .. j].dup;
+            }
+
+            return ret;
+        }
+    }
+
+    struct ReversedHashedSequence {
+        Hash[] acc;
+        size_t length;
+
+        static if (keepRawSequence) {
+            long[] rawseq;
+        }
+
+        this (T) (const T seq)
+        if (__traits(compiles, (T t) => t[0]) &&
+            __traits(compiles, (T t) => t.length) &&
+            isImplicitlyConvertible!(ForeachType!(T), long)) {
+            import std.algorithm;
+            // 全てが範囲内かチェック。
+            enforce(seq.map!((x) => 0 <= x && x < modulo).fold!((x, y) => x && y)(true));
+
+            static if (keepRawSequence) {
+                rawseq = new long[](seq.length);
+                foreach (i; 0 .. seq.length) {
+                    rawseq[i] = seq[$ - i - 1];
+                }
+            }
+
+            length = seq.length;
+            acc = new Hash[](seq.length + 1);
+            foreach (i; 0 .. seq.length) {
+                acc[i + 1] = concat(acc[i], Hash(seq[length - i - 1]));
+            }
+        }
+
+        // 右半開区間連続部分列[i, j)のハッシュを計算。
+        Hash get (const size_t i, const size_t j) {
+            enforce(i <= j);
+            enforce(j <= length);
+
+            const size_t x = length - j;
+            const size_t y = length - i;
+
+            const size_t L = y - x;
+            auto ret = acc[y];
+            ret.value -= modMul(acc[L].rPow, acc[x].value);
+            if (ret.value < 0) {
+                ret.value += modulo;
+            }
+            ret.rPow = acc[L].rPow;
+
+            static if (keepRawSequence) {
+                ret.raws = rawseq[x .. y].dup;
+            }
 
             return ret;
         }
@@ -162,7 +244,7 @@ unittest {
     import std.stdio;
     import std.exception;
 
-    writeln("[INFO] test of RollingHash!().HashedSequece");
+    writeln("[INFO] test of RollingHash!().HashedSequence and RollingHash!().ReversedHashedSequence");
     alias rh = RollingHash!();
 
     // 構築
@@ -180,7 +262,7 @@ unittest {
         assertNotThrown(h.get(0, 5));
         assertThrown(h.get(-1, 5));
         assertNotThrown(h.get(7, 7));
-        assertThrown(h.get(8, 8));
+        assertNotThrown(h.get(8, 8));
 
         // j側
         assertNotThrown(h.get(3, 8));
@@ -220,6 +302,81 @@ unittest {
 
         // [5, 42] != [42, 4]
         assert(h1.get(4, 6) != h2.get(0, 2));
+    }
+
+    // 反転
+    {
+        auto h1 = rh.HashedSequence("abcde");
+        auto h2 = rh.ReversedHashedSequence("edcba");
+
+        assert(h1.get(0, 5) == h2.get(0, 5));
+
+        auto h3 = rh.HashedSequence("abczzz");
+        auto h4 = rh.ReversedHashedSequence("cbappp");
+
+        assert(h3.get(0, 3) == h4.get(0, 3));
+        assert(h3.get(0, 2) == h4.get(1, 3));
+        assert(h3.get(0, 4) != h4.get(0, 4));
+        assert(h3.get(4, 6) != h4.get(4, 6));
+    }
+
+    writeln("[INFO] passed!");
+}
+
+unittest {
+    import std.stdio;
+    import std.exception;
+    import std.algorithm;
+    import std.array;
+
+    writeln("[INFO] test of keepRawSequence");
+    alias rh = RollingHash!(true);
+
+    // Hash単体
+    {
+        auto h = rh.Hash('A');
+        assert(h.raws.map!(v => cast(char)(v)).array == "A");
+    }
+
+    // 通常
+    auto h1 = rh.HashedSequence("Hello ");
+    auto h2 = rh.HashedSequence("World!");
+
+    auto x = h1.get(0, 6);
+    auto y = h2.get(0, 6);
+
+    assert(x.raws.map!(v => cast(char)(v)).array == "Hello ");
+    assert(y.raws.map!(v => cast(char)(v)).array == "World!");
+
+    // 部分区間・空区間
+    assert(h1.get(1, 5).raws.map!(v => cast(char)(v)).array == "ello");
+    assert(h1.get(3, 3).raws.length == 0);
+
+    // concat
+    {
+        auto z = rh.concat(x, y);
+        assert(z.raws.map!(v => cast(char)(v)).array == "Hello World!");
+    }
+
+    // reversed
+    {
+        auto h = rh.ReversedHashedSequence("abcdef");
+
+        assert(h.get(0, 6).raws.map!(v => cast(char)(v)).array == "fedcba");
+        assert(h.get(1, 4).raws.map!(v => cast(char)(v)).array == "dcb");
+        assert(h.get(2, 2).raws.length == 0);
+    }
+
+    // reversed + concat
+    {
+        auto h = rh.ReversedHashedSequence("abcdef");
+
+        auto z = rh.concat(
+            h.get(0, 4), // dcba
+            h.get(3, 6), // fed
+        );
+
+        assert(z.raws.map!(v => cast(char)(v)).array == "dcbafed");
     }
 
     writeln("[INFO] passed!");
